@@ -5,3 +5,5 @@
 *.rds
 *.fasta
 *.Rproj
+*.fa
+*.csv
