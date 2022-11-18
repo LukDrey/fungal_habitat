@@ -195,185 +195,18 @@ physeq_sch_bark_fagus <- phyloseq::subset_samples(physeq_sch_bark, dominant_tree
 physeq_sch_soil_fagus <- phyloseq::subset_samples(physeq_sch_soil, dominant_tree == "Fagus_sylvatica") %>% 
   phyloseq::prune_taxa(phyloseq::taxa_sums(.) > 0,.)
 
-physeq_sch_bark_picea <- phyloseq::subset_samples(physeq_sch_bark, dominant_tree == "Picea_abies") %>% 
+physeq_sch_bark_pinus <- phyloseq::subset_samples(physeq_sch_bark, dominant_tree == "Pinus_sylvestris") %>% 
   phyloseq::prune_taxa(phyloseq::taxa_sums(.) > 0,.)
 
-physeq_sch_soil_picea <- phyloseq::subset_samples(physeq_sch_soil, dominant_tree == "Picea_abies") %>% 
+physeq_sch_soil_pinus <- phyloseq::subset_samples(physeq_sch_soil, dominant_tree == "Pinus_sylvestris") %>% 
   phyloseq::prune_taxa(phyloseq::taxa_sums(.) > 0,.)
 
 
+#################################################################
+##                          Section 3                          ##
+##                  Analyse the library sizes                  ##
+#################################################################
 
-
-
-
-
-
-
-
-
-
-## import sample data and generate phyloseq object ##
-#20220129 updated sample_data file with library sizes and
-# reduced to Alb + Schorfheide --> object physeq5
-#20220226 included plot as sample data information:
-sdata5 <- read.csv2("C:/Users/behof/Desktop/MSc Umweltwissenschaften/Master Thesis/data_analysis/sample_data_3_AS.csv")
-colnames(sdata5) <- c("sample","exploratory","dominant_tree","tree_type","substrate","library_size","plot")
-sdata6 <- sdata5 %>% remove_rownames %>% column_to_rownames(var="sample")
-head(sdata6)
-sampledata3 = sample_data(sdata6)
-head(sampledata3)
-# phyloseq object Alb + Schorfheide + library size -> physeq5
-physeq5 = phyloseq(ASV, TAX, sampledata3, random_tree)
-physeq5
-physeq5_s <- subset_samples(physeq5, substrate=="soil")
-physeq5_s
-physeq5_s1 <- prune_taxa(taxa_sums(physeq5_s) > 0, physeq5_s)
-physeq5_s1
-physeq5_b <- subset_samples(physeq5, substrate=="bark")
-physeq5_b
-physeq5_b1 <- prune_taxa(taxa_sums(physeq5_b) > 0, physeq5_b)
-physeq5_b1
-
-## create sub phyloseq objects for Alb and Schorfheide ##
-#20220226 included plot as sample data information:
-#20220226 included ForMI
-#20220308 added venn class to sample data
-
-#phyloseq object Alb#
-sdata7 <- read.csv2("C:/Users/behof/Desktop/MSc Umweltwissenschaften/Master Thesis/data_analysis/sample_data_3_A.csv")
-colnames(sdata7) <- c("sample","exploratory","dominant_tree","tree_type","substrate","library_size", "plot","ForMI","ForMIclass","Iharv","Inonat","Idwcut","venn_class")
-sdata8 <- sdata7 %>% remove_rownames %>% column_to_rownames(var="sample")
-head(sdata8)
-sampledataAlb = sample_data(sdata8)
-head(sampledataAlb)
-physeqAlb = phyloseq(ASV, TAX, sampledataAlb, random_tree)
-physeqAlb
-physeqAlb_1 <- prune_taxa(taxa_sums(physeqAlb) > 0, physeqAlb)
-physeqAlb_1
-
-#phyloseq object Schorfheide#
-sdata9 <- read.csv2("C:/Users/behof/Desktop/MSc Umweltwissenschaften/Master Thesis/data_analysis/sample_data_3_S.csv")
-colnames(sdata9) <- c("sample","exploratory","dominant_tree","tree_type","substrate","library_size", "plot","ForMI","ForMIclass","Iharv","Inonat","Idwcut","venn_class")
-sdata10 <- sdata9 %>% remove_rownames %>% column_to_rownames(var="sample")
-head(sdata10)
-sampledataSchorf = sample_data(sdata10)
-head(sampledataSchorf)
-physeqSchorf = phyloseq(ASV, TAX, sampledataSchorf, random_tree)
-physeqSchorf
-physeqSchorf_1 <- prune_taxa(taxa_sums(physeqSchorf) > 0, physeqSchorf)
-physeqSchorf_1
-
-########20220304: subsets soil / bark per exploratory Alb + Schorfheide
-
-#phyloseq object Alb soil
-physeqAlb_s <- subset_samples(physeqAlb, substrate=="soil")
-physeqAlb_s
-physeqAlb_s1 <- prune_taxa(taxa_sums(physeqAlb_s) > 0, physeqAlb_s)
-physeqAlb_s1
-
-
-#phyloseq object Alb bark
-physeqAlb_b <- subset_samples(physeqAlb, substrate=="bark")
-physeqAlb_b
-physeqAlb_b1 <- prune_taxa(taxa_sums(physeqAlb_b) > 0, physeqAlb_b)
-physeqAlb_b1
-table(tax_table(physeqAlb_b1)[, 2])
-GP.chl = subset_taxa(physeqAlb_b1, is.na(Phylum))
-ps_Alb_b_na_rel_abund = phyloseq::transform_sample_counts(GP.chl, function(x){x / sum(x)})
-taxa_sums(ps_Alb_b_na_rel_abund)
-most_abundant_taxa = sort(taxa_sums(ps_Alb_b_na_rel_abund), TRUE)[1:173]
-
-
-#phyloseq object Schorfheide soil
-physeqSchorf_s <- subset_samples(physeqSchorf, substrate=="soil")
-physeqSchorf_s
-physeqSchorf_s1 <- prune_taxa(taxa_sums(physeqSchorf_s) > 0, physeqSchorf_s)
-physeqSchorf_s1
-
-#phyloseq object Schorfheide bark
-physeqSchorf_b <- subset_samples(physeqSchorf, substrate=="bark")
-physeqSchorf_b
-physeqSchorf_b1 <- prune_taxa(taxa_sums(physeqSchorf_b) > 0, physeqSchorf_b)
-physeqSchorf_b1
-table(tax_table(physeqSchorf_b1)[, 2])
-GP.chl2 = subset_taxa(physeqSchorf_b1, is.na(Phylum))
-ps_Schorf_b_na_rel_abund = phyloseq::transform_sample_counts(GP.chl2, function(x){x / sum(x)})
-taxa_sums(ps_Schorf_b_na_rel_abund)
-most_abundant_taxa_S = sort(taxa_sums(ps_Schorf_b_na_rel_abund), TRUE)[1:137]
-
-########20220311: subsets soil / bark per exploratory Alb + Schorfheide & per tree
-##for more detailed networks to define hub taxa
-
-#phyloseq object Alb soil Fagus
-physeqAlb_sF <- subset_samples(physeqAlb, venn_class=="F.sylvatica_soil")
-physeqAlb_sF
-OTU_AsF = as(otu_table(physeqAlb_sF), "matrix")
-OTU_AsF
-tax_table(physeqAlb_sF)
-otu_table(physeqAlb_sF)
-physeqAlb_sF1 <- prune_taxa(taxa_sums(physeqAlb_sF) > 0, physeqAlb_sF)
-physeqAlb_sF1
-
-#phyloseq object Alb bark Fagus
-physeqAlb_bF <- subset_samples(physeqAlb, venn_class=="F.sylvatica_bark")
-physeqAlb_bF
-physeqAlb_bF1 <- prune_taxa(taxa_sums(physeqAlb_bF) > 0, physeqAlb_bF)
-physeqAlb_bF1
-
-#phyloseq object Alb soil Picea
-physeqAlb_sP <- subset_samples(physeqAlb, venn_class=="P.abies_soil")
-physeqAlb_sP
-physeqAlb_sP1 <- prune_taxa(taxa_sums(physeqAlb_sP) > 0, physeqAlb_sP)
-physeqAlb_sP1
-
-#phyloseq object Alb bark Picea
-physeqAlb_bP <- subset_samples(physeqAlb, venn_class=="P.abies_bark")
-physeqAlb_bP
-physeqAlb_bP1 <- prune_taxa(taxa_sums(physeqAlb_bP) > 0, physeqAlb_bP)
-physeqAlb_bP1
-
-#phyloseq object Schorfheide soil Fagus
-physeqSchorf_sF <- subset_samples(physeqSchorf, venn_class=="F.sylvatica_soil")
-physeqSchorf_sF
-physeqSchorf_sF1 <- prune_taxa(taxa_sums(physeqSchorf_sF) > 0, physeqSchorf_sF)
-physeqSchorf_sF1
-
-#phyloseq object Schorfheide bark Fagus
-physeqSchorf_bF <- subset_samples(physeqSchorf, venn_class=="F.sylvatica_bark")
-physeqSchorf_bF
-physeqSchorf_bF1 <- prune_taxa(taxa_sums(physeqSchorf_bF) > 0, physeqSchorf_bF)
-physeqSchorf_bF1
-
-#phyloseq object Schorfheide soil Pinus
-physeqSchorf_sP <- subset_samples(physeqSchorf, venn_class=="P.sylvestris_soil")
-physeqSchorf_sP
-physeqSchorf_sP1 <- prune_taxa(taxa_sums(physeqSchorf_sP) > 0, physeqSchorf_sP)
-physeqSchorf_sP1
-
-#phyloseq object Schorfheide bark Pinus
-physeqSchorf_bP <- subset_samples(physeqSchorf, venn_class=="P.sylvestris_bark")
-physeqSchorf_bP
-physeqSchorf_bP1 <- prune_taxa(taxa_sums(physeqSchorf_bP) > 0, physeqSchorf_bP)
-physeqSchorf_bP1
-
-########20220313: subsets Fagus / Picea / Pinus 
-##for stacked bar plots
-
-#phyloseq object Alb Fagus
-physeqAlb_F <- subset_samples(physeqAlb, dominant_tree=="Fagus_sylvatica")
-physeqAlb_F
-
-#phyloseq object Alb Picea
-physeqAlb_P <- subset_samples(physeqAlb, dominant_tree=="Picea_abies")
-physeqAlb_P
-
-#phyloseq object Schorfheide Fagus
-physeqSchorf_F <- subset_samples(physeqSchorf, dominant_tree=="Fagus_sylvatica")
-physeqSchorf_F
-
-#phyloseq object Schorfheide Pinus
-physeqSchorf_P <- subset_samples(physeqSchorf, dominant_tree=="Pinus_sylvestris")
-physeqSchorf_P
 
 
 ###########analyze library sizes coniferous - deciduous (unbalanced sample design)################
@@ -515,31 +348,10 @@ ggsave(
   dpi = 800
 )
 
-#######examples phyloseq3################
-
-#trees make no sense with 11952 ASVs
-#plot_tree(physeq3, color="exploratory", label.tips="substrate", ladderize="left", plot.margin=0.3)
-#plot_tree(physeq3, color="substrate", label.tips="substrate", ladderize="left", plot.margin=0.3)
 
 ########################################
 ########alpha diversity#################
 ########################################
-
-
-#older versions / physeq object
-#plot_richness(physeq3)
-#plot_richness(physeq3, measures = c("Observed"))
-#plot_richness(physeq3, x="leaf_shape", measures = c("Observed","Shannon"))
-#plot_richness(physeq3, x="dominant_tree", measures = c("Observed","Shannon"))
-#-> control samples sollten aus den Daten rausgeschmissen werden
-#plot_richness(physeq3, x="exploratory", measures = c("Observed","Shannon"))
-#plot_richness(physeq3, x="exploratory", color = "substrate", measures = c("Observed","Shannon"))
-#plot_richness(physeq3, x="exploratory", color = "substrate", measures = c("Chao1"))
-#plot_richness(physeq3, x="leaf_shape", color = "substrate", measures = c("Observed","Shannon"))
-#plot_richness(physeq3, x="substrate", color = "leaf_shape", measures = c("Observed","Shannon"))
-
-install.packages("ggdist")
-library("ggdist")
 
 ###by substrate
 plot_richness(physeq4, x="substrate", measures = c("Chao1","Shannon"), color = "substrate") + scale_colour_manual(values = c("burlywood4","chocolate1")) + 
@@ -610,25 +422,6 @@ plot_richness(physeq4, x="plot", color = "substrate", measures = c("Shannon")) +
   scale_colour_manual(values = c("burlywood4","chocolate1")) +
   geom_boxplot(outlier.shape  = NA) + geom_jitter(aes(), height = 0, width = .2)
 
-
-###by management intensity##
-plot_richness(physeq4, x="ForMIclass", measures = c("Shannon"), color = "ForMIclass") + 
-  scale_colour_manual(values = c("firebrick2","seagreen2","palegreen","seashell4")) + 
-  geom_boxplot(outlier.shape  = NA, fill = c("firebrick2","seagreen2","palegreen","seashell4")) + geom_jitter(aes(), height = 0, width = .2) +
-  theme(axis.text.x = element_blank(), axis.title.x = element_blank(),axis.ticks.x = element_blank()) +
-  ## add half-violin from {ggdist} package
-  ggdist::stat_halfeye(
-    ## custom bandwidth
-    adjust = .5, 
-    ## adjust height
-    width = .7, 
-    ## move geom to the right
-    justification = -.01,
-    ## remove slab interval(transparency)
-    .width = 0, 
-    point_colour = NA,
-    alpha = 0.5
-  ) 
 
 ################Alb + Schorfheide###########################
 
@@ -970,40 +763,8 @@ plot_richness(physeqSchorf, x="substrate", color = "dominant_tree", measures = c
   geom_violin() + scale_fill_manual(values=c("green2", "darkgreen")) +
   geom_jitter(aes(), height = 0, width = .2, shape=16) 
 
-###20220802 - lists of alpha diversity
-shannon_Alb_b_F <- estimate_richness(physeqAlb_bF1, split = T, measures = "Shannon")
-shannon_Alb_b_F
-write.csv(shannon_Alb_b_F, "C:/Users/behof/Desktop/MSc Umweltwissenschaften/Paper_Masterthesis/shannon_Alb_b_F.csv")
-
-shannon_Alb_b_P <- estimate_richness(physeqAlb_bP1, split = T, measures = "Shannon")
-write.csv(shannon_Alb_b_P, "C:/Users/behof/Desktop/MSc Umweltwissenschaften/Paper_Masterthesis/shannon_Alb_b_P.csv")
-
-shannon_Alb_s_F <- estimate_richness(physeqAlb_sF1, split = T, measures = "Shannon")
-write.csv(shannon_Alb_s_F, "C:/Users/behof/Desktop/MSc Umweltwissenschaften/Paper_Masterthesis/shannon_Alb_s_F.csv")
-
-shannon_Alb_s_P <- estimate_richness(physeqAlb_sP1, split = T, measures = "Shannon")
-write.csv(shannon_Alb_s_P, "C:/Users/behof/Desktop/MSc Umweltwissenschaften/Paper_Masterthesis/shannon_Alb_s_P.csv")
-
-shannon_Schorf_b_F <- estimate_richness(physeqSchorf_bF1, split = T, measures = "Shannon")
-write.csv(shannon_Schorf_b_F, "C:/Users/behof/Desktop/MSc Umweltwissenschaften/Paper_Masterthesis/shannon_Schorf_b_F.csv")
-
-shannon_Schorf_b_P <- estimate_richness(physeqSchorf_bP1, split = T, measures = "Shannon")
-write.csv(shannon_Schorf_b_P, "C:/Users/behof/Desktop/MSc Umweltwissenschaften/Paper_Masterthesis/shannon_Schorf_b_P.csv")
-
-shannon_Schorf_s_F <- estimate_richness(physeqSchorf_sF1, split = T, measures = "Shannon")
-write.csv(shannon_Schorf_s_F, "C:/Users/behof/Desktop/MSc Umweltwissenschaften/Paper_Masterthesis/shannon_Schorf_s_F.csv")
-
-shannon_Schorf_s_P <- estimate_richness(physeqSchorf_sP1, split = T, measures = "Shannon")
-write.csv(shannon_Schorf_s_P, "C:/Users/behof/Desktop/MSc Umweltwissenschaften/Paper_Masterthesis/shannon_Schorf_s_P.csv")
-
 
 ################taxonomy exploration#################
-
-############Alb + Schorfheide################
-##heatmaps
-#by phylum
-plot_heatmap(physeq5, taxa.label="Phylum")
-plot_heatmap(physeq5, taxa.label="Class")
 
 
 ######for all EP plots#######
@@ -1050,37 +811,6 @@ summary(anova_exploratory)
 pairwise.t.test(results$Shannon, d$exploratory, p.adjust="bonferroni")
 
 
-##subsample data to calculate test statistics
-#subsample reads
-(ps_rare <- phyloseq::rarefy_even_depth(physeq4, rngseed = 123, replace = FALSE))
-#generate data.frame with adiv measures
-adiv <- data.frame(
-  "Shannon" = phyloseq::estimate_richness(ps_rare, measures = Shannon),
-  "PD" = picante::pd(samp = data.frame(t(data.frame(phyloseq::otu_table(ps_rare)))), tree = phyloseq::phy_tree(ps_rare))[, 1],
-  "substrate" = phyloseq::sample_data(ps_rare)$substrate,
-  "tree_type" = phyloseq::sample_data(ps_rare)$tree_type,
-  "dominant_tree" = phyloseq::sample_data(ps_rare)$dominant_tree,
-  "exploratory" = phyloseq::sample_data(ps_rare)$exploratory,)
-head(adiv)
-
-
-#das klappt noch nicht mit wrapper function, aber oben i.O.
-#my_richness_boxplot <- function(myphyseq, myxcol, mytitle, myxlab)  {
-  #phyloseq::plot_richness(physeq4 = myphyseq, x = {{myxcol}}, measures = c('Shannon', 'Observed')) +
-   # geom_boxplot(aes(fill= intensity)) +
-    #theme_bw() +
-    #xlab(myxlab) +
-    #ylab('Alpha Diversity') +
-    #ggtitle(mytitle) +
-    #theme(axis.text=element_text(size=8),axis.title = element_text(size=8),
-     #     legend.position = 'none',axis.text.x = element_text(angle = 90))
-#}
-
-
-##phylogenetic tree#
-plot_tree(physeq4, color = "tree_type", label.tips = "Phylum", ladderize = "left", justify = "left")
-#man sieht leider nix 
-
 #######barplots####
 plot_bar(physeq3, x="substrate", fill="Class")
 plot_bar(physeq3, x="substrate", fill="Phylum")
@@ -1098,16 +828,6 @@ library("ggplot2")
 theme_set(theme_bw())
 library("plyr")
 
-#remove ASVs that do not appear more than 5 times in more than half the samples
-#wh0 = genefilter_sample(physeq3, filterfun_sample(function(x) x>5), A=0.5*nsamples(physeq3))
-#GP1 = prune_taxa(wh0, physeq3) #GP1 naming from tutorial
-#transform to even sampling depth
-#GP1 = transform_sample_counts(GP1, function(x) 1E6 * x/sum(x))
-#keep only most abundant five phyla
-#phylum.sum = tapply(taxa_sums(GP1), tax_table(GP1)[, "Phylum"], sum, na.rm=TRUE)
-#top5phyla = names(sort(phylum.sum, TRUE))[1:5]
-#GP1 = prune_taxa((tax_table(GP1)[, "Phylum"] %in% top5phyla), GP1)
-
 #plot ordination of ASVs by phylum (NMDS)
 ASVord <- ordinate(physeq3, "NMDS", "bray")
 p1 = plot_ordination(physeq3, ASVord, type = "taxa", color = "Phylum", title = "taxa")
@@ -1119,8 +839,7 @@ p1 + facet_wrap(~Phylum, 3)
 #by leaf_shape
 p2 = plot_ordination(physeq3, ASVord, type="sample", color="leaf_shape")
 print(p2)
-#p2 + geom_polygon(aes(fill="leaf_shape")) + geom_point(size=5) + ggtitle("samples by leaf_shape")
-# sieht mit polygon kacke aus
+
 #by exploratory
 p3 = plot_ordination(physeq3, ASVord, type="sample", color="exploratory")
 print(p3)
@@ -1158,15 +877,6 @@ p8 + facet_wrap(~"substrate")
 p9 = plot_ordination(physeq4, ASVord2, type="taxa", color="substrate", title="ordination by tree type - PCoA") 
 p9 + facet_wrap(~Phylum, 3)
 
-#comparison or ordination methods
-dist = "bray"
-ord_meths = c("DCA", "CCA", "RDA", "DPCoA", "NMDS", "MDS", "PCoA")
-plist = llply(as.list(ord_meths), function(i, physeq, dist){
-  ordi = ordinate(physeq4, method=i, distance=dist)
-  plot_ordination(physeq4, ordi, "samples", color="SampleType")
-}, ASVord2, dist)
-
-names(plist) <- ord_meths
 
 #########################Alb############################
 
@@ -1325,18 +1035,6 @@ varp
 #plot venn diagramm variation Alb
 plot(varp, digits = 2, Xnames = c("substrate", "tree species"), bg = c("navy", "hotpink"))
 
-#anova testing Alb
-#fraction substrate Alb
-rda.substrate.tree <- rda(Y ~ substrate + Condition (dominant_tree), data = dat)
-#fraction tree Alb
-rda.tree.substrate <- rda(Y ~ dominant_tree + Condition (substrate), data = dat)
-#test individual fractions Alb
-anova(rda.all) #***
-anova(rda.substrate)#***
-anova(rda.tree) #***
-anova(rda.substrate.tree) #***
-anova(rda.tree.substrate) #***
-
 ### Schorfheide ###
 
 #extract OTU table Schorf
@@ -1405,15 +1103,7 @@ anova(rda.substrate.tree_Schorf) #***
 anova(rda.tree.substrate_Schorf) #***
 
 
-# use standardised categorical and continuous predictors in the constraint (X)
-X <- ade4::dudi.mix(dat, scannf=F, nf=2)$tab
 
-library(devtools)
-install_github("umerijaz/microbiomeSeq")
-library(microbiomeSeq)
-p <- plot_anova_env(physeqAlb, grouping_column = "substrate", pValueCutoff = 0.05, 
-                    select.variables = "dominant_tree")
-print(p)
 
 
 ##determine the influence of PCs
