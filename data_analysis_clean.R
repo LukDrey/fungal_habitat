@@ -99,6 +99,7 @@ fungi_tax_fin <- tidyr::separate(tax_clean_fungi, Kingdom, c(NA, 'Kingdom') , se
 # Rename the ASV_ID column. 
 fungi_tax_fin <- dplyr::rename(fungi_tax_fin, ASV_ID = seq_name_fungi)
 
+
 # Set rownames.
 base::row.names(fungi_tax_fin) <- fungi_tax_fin$ASV_ID
 
@@ -144,19 +145,27 @@ sampledata <- phyloseq::sample_data(metadata)
 
 full_physeq <- phyloseq::phyloseq(ASV, TAX, sampledata)
 
-# Split the phyloseq object into the two exploratories.
+# Filter out samples that were sampled on trees that are not from our three target species. 
 
-physeq_alb <- phyloseq::subset_samples(full_physeq, exploratory == "Alb") %>% 
+filtered_physeq <- phyloseq::subset_samples(full_physeq, 
+                                            dominant_tree %in% c("Fagus_sylvatica",
+                                                                 "Pinus_sylvestris", 
+                                                                 "Picea_abies")) %>% 
   phyloseq::prune_taxa(phyloseq::taxa_sums(.) > 0,.)
 
-physeq_sch <- phyloseq::subset_samples(full_physeq, exploratory == "Schorfheide") %>% 
+# Split the phyloseq object into the two exploratories.
+
+physeq_alb <- phyloseq::subset_samples(filtered_physeq, exploratory == "Alb") %>% 
+  phyloseq::prune_taxa(phyloseq::taxa_sums(.) > 0,.)
+
+physeq_sch <- phyloseq::subset_samples(filtered_physeq, exploratory == "Schorfheide") %>% 
   phyloseq::prune_taxa(phyloseq::taxa_sums(.) > 0,.)
 
 # Split the phyloseq object into bark and soil samples. 
-physeq_bark <- phyloseq::subset_samples(full_physeq, substrate == "bark") %>% 
+physeq_bark <- phyloseq::subset_samples(filtered_physeq, substrate == "bark") %>% 
   phyloseq::prune_taxa(phyloseq::taxa_sums(.) > 0,.)
 
-physeq_soil <- phyloseq::subset_samples(full_physeq, substrate == "soil") %>% 
+physeq_soil <- phyloseq::subset_samples(filtered_physeq, substrate == "soil") %>% 
   phyloseq::prune_taxa(phyloseq::taxa_sums(.) > 0,.)
 
 # Split the phyloseq object into the two exploratories & the substrate.
@@ -206,119 +215,14 @@ physeq_sch_soil_pinus <- phyloseq::subset_samples(physeq_sch_soil, dominant_tree
 ##                          Section 3                          ##
 ##                  Analyse the library sizes                  ##
 #################################################################
+# Create a sample_data column containing a column that corresponds to tree species and substrate.
+physeq_alb_curve <- physeq_alb
+sample_data(physeq_alb_curve) <- sample_data(physeq_alb) %>% 
+  data.frame() %>%  
+  mutate(tree_substrate = paste(dominant_tree, substrate, sep = "-"))
 
-
-
-###########analyze library sizes coniferous - deciduous (unbalanced sample design)################
-#boxplot library size Alb + Schorfheide
-libsize <- read.csv2("C:/Users/behof/Desktop/MSc Umweltwissenschaften/Master Thesis/data_analysis/sample_data_3_AS.csv")
-boxplot(libsize$library_size[libsize$tree_type=="coniferous"],
-        libsize$library_size[libsize$tree_type=="deciduous"],
-        main="boxplot library size coniferous vs. deciduous (A + S)", names = c("coniferous","deciduous"), 
-        col = c("darkgreen","green2")) 
-text(1.5,130000,"n.s.",col = "firebrick4", cex = 2)
-##test statistics
-#Welch t-test
-libconif <- libsize$library_size[libsize$tree_type=="coniferous"]
-libdecid <- libsize$library_size[libsize$tree_type=="deciduous"]
-t.test(libconif, libdecid)
-#Wilcoxon test
-wilcox.test(library_size~tree_type, data = libsize, exact = FALSE, correct = FALSE, conf.int = FALSE)
-
-##Alb
-#boxplot library size Alb
-libsizeA <- read.csv2("C:/Users/behof/Desktop/MSc Umweltwissenschaften/Master Thesis/data_analysis/sample_data_3_A.csv")
-boxplot(libsizeA$library_size[libsizeA$tree_type=="coniferous"],
-        libsizeA$library_size[libsizeA$tree_type=="deciduous"],
-        main="boxplot library size coniferous vs. deciduous (Alb)", names = c("coniferous","deciduous"), 
-        col = c("darkgreen","green2"))
-text(1.5,130000,"n.s.",col = "firebrick4", cex = 2)
-#test statistics Alb
-#Welch t-test
-libconifA <- libsizeA$library_size[libsizeA$tree_type=="coniferous"]
-libdecidA <- libsizeA$library_size[libsizeA$tree_type=="deciduous"]
-t.test(libconifA, libdecidA)
-#Wilcoxon test
-wilcox.test(library_size~tree_type, data = libsizeA, exact = FALSE, correct = FALSE, conf.int = FALSE)
-
-##Schorfheide
-#boxplot library size Schorfheide
-libsizeS <- read.csv2("C:/Users/behof/Desktop/MSc Umweltwissenschaften/Master Thesis/data_analysis/sample_data_3_S.csv")
-boxplot(libsizeS$library_size[libsizeS$tree_type=="coniferous"],
-        libsizeS$library_size[libsizeS$tree_type=="deciduous"],
-        main="boxplot library size coniferous vs. deciduous (Schorfheide)", names = c("coniferous","deciduous"), 
-        col = c("darkgreen","green2"))
-text(1.5,130000,"n.s.",col = "firebrick4", cex = 2)
-#test statistics Schorfheide
-#Welch t-test
-libconifS <- libsizeS$library_size[libsizeS$tree_type=="coniferous"]
-libdecidS <- libsizeS$library_size[libsizeS$tree_type=="deciduous"]
-t.test(libconifS, libdecidS)
-#Wilcoxon test
-wilcox.test(library_size~tree_type, data = libsizeS, exact = FALSE, correct = FALSE, conf.int = FALSE)
-
-#boxplot Schorfheide + Alb separated
-boxplot(libsizeA$library_size[libsizeA$tree_type=="coniferous"],
-        libsizeA$library_size[libsizeA$tree_type=="deciduous"],
-  libsizeS$library_size[libsizeS$tree_type=="coniferous"],
-        libsizeS$library_size[libsizeS$tree_type=="deciduous"],
-        main="boxplot library size coniferous vs. deciduous", 
-  names = c("coniferous Alb","deciduous Alb", "coniferous Schorfh.", "deciduous Schorfh."), 
-        col = c("darkgreen","green2","darkgreen","green2"))
-
-####two way ANOVA for the boxplot library sizes 
-#not applicable for the dataframe!
-install.packages("rstatix")
-install.packages("ggpubr")
-library(rstatix)
-library(ggpubr)
-set.seed(123)
-libsize %>% sample_n_by(exploratory, tree_type, size = 1)
-libsize %>%
-  group_by(exploratory, tree_type) %>%
-  get_summary_stats(library_size, type = "mean_sd")
-#identify outliers
-libsize %>%
-  group_by(exploratory, tree_type) %>%
-  identify_outliers(library_size)
-#check normality assumption
-# Build the linear model
-model  <- lm(library_size ~ exploratory*tree_type,
-             data = libsize)
-# Create a QQ plot of residuals
-ggqqplot(residuals(model))
-# Compute Shapiro-Wilk test of normality
-shapiro_test(residuals(model))
-#-> ANoVA nur zulässig bei normalverteilten Residuen, hier nicht der Fall
-# Alternative: Kruskal-Wallis test 
-describeBy(libsize$library_size,libsize$exploratory)
-describeBy(libsize$library_size,libsize$tree_type)
-kruskal.test(libsize$library_size~libsize$exploratory)
-kruskal.test(libsize$library_size~libsize$tree_type)
-
-###rarefaction curves Alb + Schorfheide separated###
-library("vegan")
-library("ranacapa")
-library(devtools)
-devtools::install_github("gauravsk/ranacapa")
-###rarefaction curve samples Alb###
-rarecurve <- vegan::rarecurve(t(otu_table(physeqAlb)), step = 50, cex = 0.5,  xlim=c(0, 90000), label = F, col = "dodgerblue4")
-rarecurveAlb <- ggrare(otu_table(physeqAlb), step = 50, color = "substrate", label = "rarefaction Alb by substrate") 
-rlang::last_error()
-rlang::last_trace()
-plot(rarecurveAlb)
-
-rareAlb <- ggrare(physeqAlb, step = 50, color = "tree_type", se = FALSE)
-ggsave(
-  "rarefaction_Alb.png",
-  width = 8.3,
-  height = 5.7,
-  dpi = 800
-)
-rareAlb <- ggrare(physeqAlb, step = 50, color = "substrate", se = FALSE)
-
-#20220728 - color by venn_class
-rareAlb <- ggrare(physeqAlb, step = 50, color = "venn_class", se = FALSE)
+# Create rarefaction curve and color the lines by substrate (bark/soil) and host tree species. 
+rareAlb <- ggrare(physeq_alb, step = 50, color = "tree_substrate", se = FALSE)
 ggsave(
   "rarefaction_Alb_venn.png",
   width = 8.3,
