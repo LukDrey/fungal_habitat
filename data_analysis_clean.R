@@ -71,7 +71,7 @@ library(ade4)
 ##---------------------------------------------------------------
 
 # Load in taxonomy table. 
-tax_fungi <- base::readRDS(here::here("tax_table_fungi.rds")) %>% 
+tax_fungi <- base::readRDS(here::here("fungi_tax_euk.rds")) %>% 
   base::as.data.frame() %>%
   tibble::rownames_to_column('sequence') %>%
   dplyr::rename(sequence_fungi = sequence)
@@ -95,6 +95,10 @@ fungi_tax_fin <- tidyr::separate(tax_clean_fungi, Kingdom, c(NA, 'Kingdom') , se
   tidyr::separate(Family, c(NA, 'Family') , sep = '__') %>% 
   tidyr::separate(Genus, c(NA, 'Genus') , sep = '__') %>% 
   tidyr::separate(Species, c(NA, 'Species') , sep = '__')
+
+# Keep only Fungi 
+fungi_tax_fin <- fungi_tax_fin %>% 
+  dplyr::filter(Kingdom == "Fungi")
 
 # Rename the ASV_ID column. 
 fungi_tax_fin <- dplyr::rename(fungi_tax_fin, ASV_ID = seq_name_fungi)
@@ -215,6 +219,9 @@ physeq_sch_soil_pinus <- phyloseq::subset_samples(physeq_sch_soil, dominant_tree
 ##                          Section 3                          ##
 ##                  Analyse the library sizes                  ##
 #################################################################
+
+################Swabian Alb###########################
+
 # Create a sample_data column containing a column that corresponds to tree species and substrate.
 physeq_alb_curve <- physeq_alb
 sample_data(physeq_alb_curve) <- sample_data(physeq_alb) %>% 
@@ -222,658 +229,160 @@ sample_data(physeq_alb_curve) <- sample_data(physeq_alb) %>%
   mutate(tree_substrate = paste(dominant_tree, substrate, sep = "-"))
 
 # Create rarefaction curve and color the lines by substrate (bark/soil) and host tree species. 
-rareAlb <- ggrare(physeq_alb, step = 50, color = "tree_substrate", se = FALSE)
-ggsave(
-  "rarefaction_Alb_venn.png",
-  width = 8.3,
-  height = 5.7,
-  dpi = 800
-)
+rare_alb <- ggrare(physeq_alb_curve, step = 50, color = "tree_substrate", se = FALSE)
+
+################Schorfheide###########################
+
+# Create a sample_data column containing a column that corresponds to tree species and substrate.
+physeq_sch_curve <- physeq_sch
+sample_data(physeq_sch_curve) <- sample_data(physeq_sch) %>% 
+  data.frame() %>%  
+  mutate(tree_substrate = paste(dominant_tree, substrate, sep = "-"))
+
+# Create rarefaction curve and color the lines by substrate (bark/soil) and host tree species. 
+rare_sch <- ggrare(physeq_sch_curve, step = 50, color = "tree_substrate", se = FALSE)
 
 
-###rarefaction curve samples Schorfheide###
-rarecurveSchorf <- vegan::rarecurve(t(otu_table(physeqSchorf)), step = 50, cex = 0.5,  xlim=c(0, 90000), label = F, col = "dodgerblue4")
-
-rareSchorf <- ggrare(physeqSchorf, step = 50, color = "tree_type", se = FALSE)
-ggsave(
-  "rarefaction_Schorf.png",
-  width = 8.3,
-  height = 5.7,
-  dpi = 800
-)
-rareSchorf <- ggrare(physeqSchorf, step = 50, color = "substrate", se = FALSE)
-
-#20220728 - color by venn_class
-rareSchorf <- ggrare(physeqSchorf, step = 50, color = "venn_class", se = FALSE)
-ggsave(
-  "rarefaction_Schorf_venn.png",
-  width = 8.3,
-  height = 5.7,
-  dpi = 800
-)
-
-
-########################################
-########alpha diversity#################
-########################################
-
-###by substrate
-plot_richness(physeq4, x="substrate", measures = c("Chao1","Shannon"), color = "substrate") + scale_colour_manual(values = c("burlywood4","chocolate1")) + 
-  geom_boxplot(outlier.shape  = NA) + geom_jitter(aes(), height = 0, width = .2) +
-  theme(axis.text.x = element_blank(), axis.title.x = element_blank(),axis.ticks.x = element_blank())
-#Shannon diversity all exploratories by subsrate
-plot_richness(physeq4, x="substrate", measures = c("Shannon"), color = "substrate") + 
-  scale_colour_manual(values = c("burlywood4","chocolate1")) + 
-  geom_boxplot(outlier.shape  = NA, fill = c("burlywood", "chocolate3")) + geom_jitter(aes(), height = 0, width = .2) +
-  theme(axis.text.x = element_blank(), axis.title.x = element_blank(),axis.ticks.x = element_blank()) +
-  geom_text(x=1.5, y=5.1, label="***", color="firebrick4", size=13) +
-  ## add half-violin from {ggdist} package
-  ggdist::stat_halfeye(
-    ## custom bandwidth
-    adjust = .5, 
-    ## adjust height
-    width = .7, 
-    ## move geom to the right
-    justification = -.01,
-    ## remove slab interval(transparency)
-    .width = 0, 
-    point_colour = NA,
-    alpha = 0.5
-  ) 
-#annotate("text", x=1, y=5, label= "***", color = "deeppink", size = 15)
-#by tree_type
-plot_richness(physeq4, x="tree_type", measures = c("Chao1","Shannon"), color = "tree_type") + scale_colour_manual(values = c("darkgreen","green2")) +
-  geom_boxplot(outlier.shape  = NA) + geom_jitter(aes(), height = 0, width = .2) +
-  theme(axis.text.x = element_blank(), axis.title.x = element_blank(),axis.ticks.x = element_blank())
-#by dominant_tree
-plot_richness(physeq4, x="dominant_tree", measures = c("Shannon"), color = "dominant_tree") +
-  geom_boxplot(outlier.shape  = NA) + geom_jitter(aes(), height = 0, width = .2)
-#by dominant_tree and substrate
-plot_richness(physeq4, x="dominant_tree", measures = c("Shannon"), color = "substrate") +
-  scale_colour_manual(values = c("burlywood4","chocolate1")) +
-  geom_boxplot(outlier.shape  = NA) + geom_jitter(aes(), height = 0, width = .2)
-#by exploratory
-plot_richness(physeq4, x="exploratory", color = "substrate", measures = c("Shannon")) +
-  scale_colour_manual(values = c("burlywood4","chocolate1")) +
-  geom_boxplot(outlier.shape  = NA) + geom_jitter(aes(), height = 0, width = .2)
-plot_richness(physeq4, x="exploratory", color = "exploratory", measures = c("Shannon")) +
-  scale_colour_manual(values = c("hotpink","dodgerblue","seagreen4")) +
-  geom_boxplot(outlier.shape  = NA) + geom_jitter(aes(), height = 0, width = .2) +
-  theme(axis.text.x = element_blank(), axis.title.x = element_blank(),axis.ticks.x = element_blank()) +
-  geom_text(x=3, y=5.1, label="***", color="firebrick4", size=13)
-#by substrate and tree_type
-plot_richness(physeq4, x="substrate", color = "tree_type", measures = c("Shannon"))+ scale_colour_manual(values = c("darkgreen","green2")) +
-  geom_boxplot(outlier.shape  = NA) + geom_jitter(aes(), height = 0, width = .2) 
-#by tree type and substrate
-plot_richness(physeq4, x="tree_type", color = "substrate", measures = c("Shannon"))+ scale_colour_manual(values = c("burlywood4","chocolate1")) +
-  geom_boxplot(outlier.shape  = NA) + geom_jitter(aes(), height = 0, width = .2) +
-  ## add half-violin from {ggdist} package
-  ggdist::stat_halfeye(
-    ## custom bandwidth
-    adjust = .5, 
-    ## adjust height
-    width = .7, 
-    ## move geom to the right
-    justification = -.15, 
-    ## remove slab interval
-    .width = 0, 
-    point_colour = NA,
-    alpha = 0.5
-  ) 
-
-###by plot##
-plot_richness(physeq4, x="plot", color = "substrate", measures = c("Shannon")) +
-  scale_colour_manual(values = c("burlywood4","chocolate1")) +
-  geom_boxplot(outlier.shape  = NA) + geom_jitter(aes(), height = 0, width = .2)
-
-
-################Alb + Schorfheide###########################
+#################################################################
+##                          Section 4                          ##
+##                   Alpha diversity analyses                  ##
+#################################################################
 
 ################Swabian Alb###########################
 
 # Calculate the Shannon Diversity.
-shannon_Alb <- estimate_richness(physeqAlb, split = T, measures = 'Shannon')
-# Make a new sample_data object and merge with existing phyloseq object.
-new_sampledata_Alb <- sample_data(shannon_Alb)
-physeqAlb_div <- merge_phyloseq(physeqAlb, new_sampledata_Alb)
-fungi_sampledata_Alb <- sample_data(physeqAlb_div)
+shannon_alb <- phyloseq::estimate_richness(physeq_alb, split = T, measures = 'Shannon') %>% 
+  tibble::rownames_to_column()
 
-#basic boxplot for statistical data extraction
-shannon_plot_Alb0 <- ggplot(fungi_sampledata_Alb, aes(y= Shannon)) + geom_boxplot(
-  ## remove outliers
-  outlier.color = NA## `outlier.shape = NA` works as well 
-)
-shannon_plot_Alb0
-divdataA <- ggplot_build(shannon_plot_Alb0)$data
-divdataA
+# Extract the sample data to append it.
+sample_data_alb <- data.frame(sample_data(physeq_alb)) %>% 
+  tibble::rownames_to_column()
 
-####by tree type (in this case species) and substrate for Swabian Alb
+# Append sample_data to get the information on tree and substrate. 
+div_data_alb <- dplyr::left_join(shannon_alb, sample_data_alb)
 
-shannon_plot_Alb1 <- ggplot(fungi_sampledata_Alb, aes(x = substrate, y = Shannon, fill = dominant_tree, colour = dominant_tree)) +
-  scale_fill_manual(values = c("green","darkgreen"),name = "dominant tree species", labels = c("Fagus sylvatica", "Picea abies")) +
-  theme(legend.title = element_text(size = 12),
-        legend.text = element_text(face = "italic", size = 12))+
-  theme(legend.position = c(0.15, 0.9))+
-  scale_color_manual(values = c("green3","mediumseagreen"), guide = "none") +
-  geom_boxplot(
-    ## remove outliers
-    outlier.color = NA## `outlier.shape = NA` works as well 
-  ) +
-  theme(axis.text = element_text(size =12))  +
-  theme(axis.title = element_text(size = 12)) +
-  ## add justified jitter from the {gghalves} package
-  gghalves::geom_half_point() +
-  ylab('alpha diversity (Shannon)') + 
-  ylim (2, 5.5) 
-shannon_plot_Alb1
-ggsave(
-  "alpha_diversity_Alb1.png",
-  width = 8.3,
-  height = 5.8,
-  dpi = 800
-)
-
-#statistics
-ggplot_build(shannon_plot_Alb_1)$data
-
-
-plot_richness(physeqAlb, x="substrate", color = "dominant_tree", measures = c("Shannon"),
-              title = "fungal Shannon diversity by substrate & dominant tree Swabian Alb exploratory") +
-  geom_boxplot(outlier.shape  = NA,fill = c("green3", "mediumseagreen","green3", "mediumseagreen")) + 
-  gghalves::geom_half_point(
-    ## draw jitter on the left
-    side = "l", 
-    ## control range of jitter
-    range_scale = .4, 
-    ## add some transparency
-    alpha = .5,
-    size = .5) +
-  scale_colour_manual(values = c("green","darkgreen")) +
-  theme(legend.position = c(0.15, 0.9)) +
-  ylab("alpha diversity (Shannon)") +
-  ylim(1.5, 5.5) 
-  ## add half-violin from {ggdist} package
-  ggdist::stat_halfeye(
-    ## custom bandwidth
-    adjust = .5, 
-    ## adjust height
-    width = .7, 
-    ## move geom to the right
-    justification = -.15, 
-    ## remove slab interval
-    .width = 0, 
-    point_colour = NA,
-    alpha = 0.5
-  ) 
-
-  ###just by tree type (species) ##
+# Wilcoxon Rank Sum Test to test differences in shannon diversity between substrate and tree groups.
   
-  shannon_plot_Alb2 <- ggplot(fungi_sampledata_Alb, aes(x = dominant_tree, y = Shannon, fill = dominant_tree, colour = dominant_tree)) +
-    scale_fill_manual(values = c("green","darkgreen")) +
-    scale_color_manual(values = c("green3","mediumseagreen")) +
-    geom_boxplot(
-      ## remove outliers
-      outlier.color = NA, show.legend = FALSE## `outlier.shape = NA` works as well 
-    ) +
-    ## add justified jitter from the {gghalves} package
-    gghalves::geom_half_point() +
-    ylab('alpha diversity (Shannon)') + 
-    xlab("dominant tree species") +
-    ylim (2, 5.5) +
-    theme(legend.position = "none")+
-    scale_x_discrete(labels=c("Fagus_sylvatica" = "Fagus sylvatica", "Picea_abies" = "Picea abies"))+
-    theme(axis.text = element_text(face = "italic", size =12))  +
-    theme(axis.title = element_text(size = 12)) +
-    #theme(legend.position = c(0.15, 0.1)) +
-    #geom_text(x=1.5, y=5.3, label="n.s.", color="firebrick4", size=6)+
-    ggdist::stat_halfeye(
-      ## custom bandwidth
-      adjust = .5, 
-      ## adjust height
-      width = .7, 
-      ## move geom to the right
-      justification = -.15, 
-      ## remove slab interval
-      .width = 0, 
-      point_colour = NA,
-      alpha = 0.2
-    )
-  shannon_plot_Alb2
-  ggsave(
-    "alpha_diversity_Alb2.png",
-    width = 8.3,
-    height = 5.8,
-    dpi = 800
-  )
-  
-  
-  plot_richness(physeqAlb, x="dominant_tree", measures = c("Shannon"),
-                title = "Fungal Shannon diversity by dominant tree Swabian Alb exploratory") +
-    geom_boxplot(outlier.shape  = NA,fill = c("green3", "mediumseagreen")) + 
-    geom_jitter(aes(), height = 0, width = .2) +
-    scale_colour_manual(values = c("green","darkgreen")) +
-    geom_text(x=1.5, y=5.3, label="n.s.", color="firebrick4", size=13) +
-    ## add half-violin from {ggdist} package
-    ggdist::stat_halfeye(
-      ## custom bandwidth
-      adjust = .5, 
-      ## adjust height
-      width = .7, 
-      ## move geom to the right
-      justification = -.15, 
-      ## remove slab interval
-      .width = 0, 
-      point_colour = NA,
-      alpha = 0.5
-    ) 
+# bark vs soil
+bark_alb = div_data_alb[div_data_alb$substrate == "bark",]
+soil_alb = div_data_alb[div_data_alb$substrate == "soil",]
+wilcox.test(bark_alb$Shannon, soil_alb$Shannon)
 
-##diversity by plot Alb##
-plot_richness(physeqAlb, x="plot", color = "substrate", measures = c("Shannon")) +
-    scale_colour_manual(values = c("burlywood4","chocolate1")) +
-    geom_boxplot(outlier.shape  = NA) + geom_jitter(aes(), height = 0, width = .2)  
+# Differences between tree species within the substrate.
+# bark Fagus vs. Picea
+bark_fagus_alb = bark_alb[bark_alb$dominant_tree == "Fagus_sylvatica",]
+bark_picea_alb = bark_alb[bark_alb$dominant_tree == "Picea_abies",]
+wilcox.test(bark_fagus_alb$Shannon, bark_picea_alb$Shannon)
 
-  
-##statistics for bark and soil Swabian Alb
-  #unwrap data from phyloseq object
-  testAlb = estimate_richness(physeqAlb, measures = "Shannon")
-  A = sample_data(physeqAlb)
-  #statistic diversity bark - soil
-  bark = testAlb[A[,"substrate"] == "bark"]
-  soil = testAlb[A[,"substrate"] == "soil"]
-  wilcox.test(bark, soil)
-  ## test within groups bark & soil
-  #bark Fagus vs. Picea
-  barkFagus = bark[A[,"dominant_tree"] == "Fagus_sylvatica"]
-  barkPicea = bark[A[,"dominant_tree"] == "Picea_abies"]
-  wilcox.test(barkFagus, barkPicea)
-  #soil Fagus vs. Picea
-  soilFagus = soil[A[,"dominant_tree"] == "Fagus_sylvatica"]
-  soilPicea = soil[A[,"dominant_tree"] == "Picea_abies"]
-  wilcox.test(soilFagus, soilPicea)
-##statistics for Fagus vs. Picea Swabian Alb
-  fagusA = testAlb[A[,"dominant_tree"] == "Fagus_sylvatica"]
-  piceaA = testAlb[A[,"dominant_tree"] == "Picea_abies"]
-  wilcox.test(fagusA, piceaA)
+# soil Fagus vs. Picea
+soil_fagus_alb = soil_alb[soil_alb$dominant_tree == "Fagus_sylvatica",]
+soil_picea_alb = soil_alb[soil_alb$dominant_tree == "Picea_abies",]
+wilcox.test(soil_fagus_alb$Shannon, soil_picea_alb$Shannon)
 
+# Full Fagus vs. Picea Swabian Alb not subset by substrate
+fagus_alb = div_data_alb[div_data_alb$dominant_tree == "Fagus_sylvatica",]
+picea_alb = div_data_alb[div_data_alb$dominant_tree == "Picea_abies",]
+wilcox.test(fagus_alb$Shannon, picea_alb$Shannon)
 
-#example violin plot 
-plot_richness(physeqAlb, x="substrate", color = "dominant_tree", measures = c("Shannon"),
-              title = "fungal Shannon diversity by substrate & dominant tree Swabian Alb exploratory") +
-  scale_colour_manual(values = c("green2","darkgreen")) +
-  geom_violin() + scale_fill_manual(values=c("green2", "darkgreen")) +
-  geom_jitter(aes(), height = 0, width = .2, shape=16) 
-
-################Schorfheide###########################
+################Schorfheide-Chorin###########################
 
 # Calculate the Shannon Diversity.
-shannon_Schorf <- estimate_richness(physeqSchorf, split = T, measures = 'Shannon')
-# Make a new sample_data object and merge with existing phyloseq object.
-new_sampledata_Schorf <- sample_data(shannon_Schorf)
-physeqSchorf_div <- merge_phyloseq(physeqSchorf, new_sampledata_Schorf)
-fungi_sampledata_Schorf <- sample_data(physeqSchorf_div)
+shannon_sch <- phyloseq::estimate_richness(physeq_sch, split = T, measures = 'Shannon') %>% 
+  tibble::rownames_to_column()
 
-#basic boxplot for statistical data extraction
-shannon_plot_Schorf0 <- ggplot(fungi_sampledata_Schorf, aes(y= Shannon)) + geom_boxplot(
-  ## remove outliers
-  outlier.color = NA## `outlier.shape = NA` works as well 
-)
-shannon_plot_Schorf0
-divdataS <- ggplot_build(shannon_plot_Schorf0)$data
-divdataS
+# Extract the sample data to append it.
+sample_data_sch <- data.frame(sample_data(physeq_sch)) %>% 
+  tibble::rownames_to_column()
 
+# Append sample_data to get the information on tree and substrate. 
+div_data_sch <- dplyr::left_join(shannon_sch, sample_data_sch)
 
-####by tree type (in this case species) and substrate for Schorfheide##
+# Wilcoxon Rank Sum Test to test differences in shannon diversity between substrate and tree groups.
 
-shannon_plot_Schorf1 <- ggplot(fungi_sampledata_Schorf, aes(x = substrate, y = Shannon, fill = dominant_tree, colour = dominant_tree)) +
-  scale_fill_manual(values = c("green","darkgreen"),name = "dominant tree species", labels = c("Fagus sylvatica", "Pinus sylvestris")) +
-  theme(legend.title = element_text(size = 12),
-        legend.text = element_text(face = "italic", size = 12))+
-  theme(legend.position = c(0.15, 0.9))+
-  scale_color_manual(values = c("green3","mediumseagreen"), guide = "none") +
-  geom_boxplot(
-    ## remove outliers
-    outlier.color = NA## `outlier.shape = NA` works as well 
-  ) +
-  theme(axis.text = element_text(size =12))  +
-  theme(axis.title = element_text(size = 12)) +
-  ## add justified jitter from the {gghalves} package
-  gghalves::geom_half_point() +
-  ylab('alpha diversity (Shannon)') + 
-  ylim (2, 5.5) 
-shannon_plot_Schorf1
-ggsave(
-  "alpha_diversity_Schorf1.png",
-  width = 8.3,
-  height = 5.8,
-  dpi = 800
-)
+# bark vs soil
+bark_sch = div_data_sch[div_data_sch$substrate == "bark",]
+soil_sch = div_data_sch[div_data_sch$substrate == "soil",]
+wilcox.test(bark_sch$Shannon, soil_sch$Shannon)
 
-#statistics
-ggplot_build(shannon_plot_Schorf1)$data
+# Differences between tree species within the substrate.
+# bark Fagus vs. Picea
+bark_fagus_sch = bark_sch[bark_sch$dominant_tree == "Fagus_sylvatica",]
+bark_pinus_sch = bark_sch[bark_sch$dominant_tree == "Pinus_sylvestris",]
+wilcox.test(bark_fagus_sch$Shannon, bark_pinus_sch$Shannon)
 
-plot_richness(physeqSchorf, x="substrate", color = "dominant_tree", measures = c("Shannon"),
-              title = "fungal Shannon diversity by substrate & dominant tree Schorfheide exploratory") +
-  geom_boxplot(outlier.shape  = NA,fill = c("green3", "mediumseagreen","green3", "mediumseagreen")) + 
-  geom_jitter(aes(), height = 0, width = .2) +
-  scale_colour_manual(values = c("green","darkgreen")) 
-## add half-violin from {ggdist} package
-ggdist::stat_halfeye(
-  ## custom bandwidth
-  adjust = .5, 
-  ## adjust height
-  width = .7, 
-  ## move geom to the right
-  justification = -.15, 
-  ## remove slab interval
-  .width = 0, 
-  point_colour = NA,
-  alpha = 0.5
-) 
+# soil Fagus vs. Picea
+soil_fagus_sch = soil_sch[soil_sch$dominant_tree == "Fagus_sylvatica",]
+soil_pinus_sch = soil_sch[soil_sch$dominant_tree == "Pinus_sylvestris",]
+wilcox.test(soil_fagus_sch$Shannon, soil_pinus_sch$Shannon)
 
-###just by tree type (species) --> shown significance##
+# Full Fagus vs. Picea Swabian sch not subset by substrate
+fagus_sch = div_data_sch[div_data_sch$dominant_tree == "Fagus_sylvatica",]
+pinus_sch = div_data_sch[div_data_sch$dominant_tree == "Pinus_sylvestris",]
+wilcox.test(fagus_sch$Shannon, pinus_sch$Shannon)
 
-shannon_plot_Schorf2 <- ggplot(fungi_sampledata_Schorf, aes(x = dominant_tree, y = Shannon, fill = dominant_tree, colour = dominant_tree)) +
-  scale_fill_manual(values = c("green","darkgreen")) +
-  scale_color_manual(values = c("green3","mediumseagreen")) +
-  geom_boxplot(
-    ## remove outliers
-    outlier.color = NA, show.legend = FALSE## `outlier.shape = NA` works as well 
-  ) +
-  ## add justified jitter from the {gghalves} package
-  gghalves::geom_half_point() +
-  ylab('alpha diversity (Shannon)') + 
-  xlab("dominant tree species") +
-  ylim (2, 5.5) +
-  theme(legend.position = "none")+
-  scale_x_discrete(labels=c("Fagus_sylvatica" = "Fagus sylvatica", "Pinus_sylvestris" = "Pinus sylvestris"))+
-  theme(axis.text = element_text(face = "italic", size =12))  +
-  theme(axis.title = element_text(size = 12)) +
-  #theme(legend.position = c(0.15, 0.1)) +
-  #geom_text(x=1.5, y=5.3, label="n.s.", color="firebrick4", size=6)+
-  ggdist::stat_halfeye(
-    ## custom bandwidth
-    adjust = .5, 
-    ## adjust height
-    width = .7, 
-    ## move geom to the right
-    justification = -.15, 
-    ## remove slab interval
-    .width = 0, 
-    point_colour = NA,
-    alpha = 0.2
-  )
-shannon_plot_Schorf2
-ggsave(
-  "alpha_diversity_Schorf2.png",
-  width = 8.3,
-  height = 5.8,
-  dpi = 800
-)
+#################################################################
+##                          Section 4                          ##
+##                    Beta diversity analyses                  ##
+#################################################################
 
+#########################NMDS-Ordination############################
+# Ordinate the Swabian Alb phyloseq using an NMDS with Bray-Curtis distance.
+nmds_alb <- phyloseq::ordinate(physeq_alb, method = "NMDS", distance = "bray")
 
-
-plot_richness(physeqSchorf, x="dominant_tree", measures = c("Shannon"),
-              title = "Fungal Shannon diversity by dominant tree Schorfheide exploratory") +
-  geom_boxplot(outlier.shape  = NA,fill = c("green3", "mediumseagreen")) + 
-  geom_jitter(aes(), height = 0, width = .2) +
-  scale_colour_manual(values = c("green","darkgreen")) +
-  geom_text(x=1.5, y=4.5, label="*", color="firebrick4", size=13) +
-  ## add half-violin from {ggdist} package
-  ggdist::stat_halfeye(
-    ## custom bandwidth
-    adjust = .5, 
-    ## adjust height
-    width = .7, 
-    ## move geom to the right
-    justification = -.15, 
-    ## remove slab interval
-    .width = 0, 
-    point_colour = NA,
-    alpha = 0.5
-  ) 
-
-###by plot (image saved - diversity_plots_substrate_Schorf)##
-#dimension 700 x 671
-plot_richness(physeqSchorf, x="plot", color = "substrate", measures = c("Shannon")) +
-  scale_colour_manual(values = c("burlywood4","chocolate1")) +
-  geom_boxplot(outlier.shape  = NA) + geom_jitter(aes(), height = 0, width = .2)
-
-###statistics for bark and soil Schorfheide
-#unwrap data from phyloseq object
-testSchorf = estimate_richness(physeqSchorf, measures = "Shannon")
-S = sample_data(physeqSchorf)
-#statistic diversity bark - soil
-bark = testSchorf[S[,"substrate"] == "bark"]
-soil = testSchorf[S[,"substrate"] == "soil"]
-wilcox.test(bark, soil)
-## test within groups bark & soil
-#bark Fagus vs. Pinus
-barkFagus = bark[S[,"dominant_tree"] == "Fagus_sylvatica"]
-barkPinus = bark[S[,"dominant_tree"] == "Pinus_sylvestris"]
-wilcox.test(barkFagus, barkPinus)
-#soil Fagus vs. Pinus
-soilFagus = soil[S[,"dominant_tree"] == "Fagus_sylvatica"]
-soilPinus = soil[S[,"dominant_tree"] == "Pinus_sylvestris"]
-wilcox.test(soilFagus, soilPinus)
-##statistics for Fagus vs. Pinus Schorfheide
-fagusS = testSchorf[S[,"dominant_tree"] == "Fagus_sylvatica"]
-pinusS = testSchorf[S[,"dominant_tree"] == "Pinus_sylvestris"]
-wilcox.test(fagusS, pinusS)
-
-###example violin plot##
-plot_richness(physeqSchorf, x="substrate", color = "dominant_tree", measures = c("Shannon"),
-              title = "fungal Shannon diversity by substrate & dominant tree Schorfheide exploratory") +
-  scale_colour_manual(values = c("green2","darkgreen")) +
-  geom_violin() + scale_fill_manual(values=c("green2", "darkgreen")) +
-  geom_jitter(aes(), height = 0, width = .2, shape=16) 
-
-
-################taxonomy exploration#################
-
-
-######for all EP plots#######
-
-###test statistics for boxplots
-#unwrap data from phyloseq object
-library("phyloseq")
-results = estimate_richness(physeq4, measures = "Shannon")
-d = sample_data(physeq4)
-#subsets for comparison factors
-#statistic diversity bark - soil
-bark = results[d[,"substrate"] == "bark"]
-soil = results[d[,"substrate"] == "soil"]
-wilcox.test(bark, soil)
-#p < 2.2e-16
-#effect size of Wilcoxon test (Björn Walter)
-  # N = 305 correct number of observations?
-z <- qnorm(2.2e-16)
-r <- z/sqrt(305)
-r
-  # r= -0.4653514 absolute value < 0.5 -> medium effect size
-
-t.test(bark, soil)
-#statistic diversity tree_type
-coniferous = results[d[,"tree_type"] == "coniferous"]
-deciduous = results[d[,"tree_type"] == "deciduous"]
-wilcox.test(coniferous, deciduous)
-t.test(coniferous, deciduous)
-#statistics for dominant_tree
-install.packages("psych")
-library(psych)
-describeBy(results$Shannon,d$dominant_tree)
-anova_dominant_tree <- aov(results$Shannon~d$dominant_tree)
-summary(anova_dominant_tree)
-#post-hoc analysis to determine between which groups difference is significant
-# - pairwise t-test
-pairwise.t.test(results$Shannon, d$dominant_tree, p.adjust="bonferroni")
-#statistics for exploratory
-describeBy(results$Shannon,d$exploratory)
-anova_exploratory <- aov(results$Shannon~d$exploratory)
-summary(anova_exploratory)
-#post-hoc analysis to determine between which groups difference is significant
-# - pairwise t-test
-pairwise.t.test(results$Shannon, d$exploratory, p.adjust="bonferroni")
-
-
-#######barplots####
-plot_bar(physeq3, x="substrate", fill="Class")
-plot_bar(physeq3, x="substrate", fill="Phylum")
-plot_bar(physeq3, x="leaf_shape", fill="Phylum")
-
-######################################################
-############beta diversity (ordination)#################
-######################################################
-
-############all exploratories#################
-
-library("phyloseq")
-library("ggplot2")
-#ggplot package theme set
-theme_set(theme_bw())
-library("plyr")
-
-#plot ordination of ASVs by phylum (NMDS)
-ASVord <- ordinate(physeq3, "NMDS", "bray")
-p1 = plot_ordination(physeq3, ASVord, type = "taxa", color = "Phylum", title = "taxa")
-print(p1)
-#facetting of the plot
-p1 + facet_wrap(~Phylum, 3)
-
-#ordination by sample types
-#by leaf_shape
-p2 = plot_ordination(physeq3, ASVord, type="sample", color="leaf_shape")
-print(p2)
-
-#by exploratory
-p3 = plot_ordination(physeq3, ASVord, type="sample", color="exploratory")
-print(p3)
-#p3 + geom_polygon(aes(fill="exploratory")) + geom_point(size=5) + ggtitle("samples by exploratory")
-#by substrate
-p4 = plot_ordination(physeq3, ASVord, type="sample", color="substrate")
-print(p4)
-#p4 + geom_polygon(aes(fill="substrate")) + geom_point(size=5) + ggtitle("samples by substrate")
-p4 + ggtitle("samples by substrate")
-#by dominant_tree
-p5 = plot_ordination(physeq3, ASVord, type="sample", color="dominant_tree")
-p5 + ggtitle("samples by dominant tree")
-
-#biplot ordination graphic with sample and ASV information
-p6 = plot_ordination(physeq3, ASVord, type="biplot", color="substrate", shape="Phylum", 
-                     title="biplot ordination substrate + Phylum")
-print(p6)
-# Some stuff to modify the automatic shape scale
-physeq3.shape.names = get_taxa_unique(physeq3, "Phylum")
-physeq3.shape <- 15:(15 + length(physeq3.shape.names) - 1)
-names(physeq3.shape) <- physeq3.shape.names
-physeq3.shape["samples"] <- 16
-p6 + scale_shape_manual(values=physeq3.shape)
-#macht so keinen Sinn
-p7 = plot_ordination(physeq3, ASVord, type="split", color="Phylum", shape="substrate", label="exploratory", title="split") 
-p7
-
-##ordination PCA/RDA##
-ASVord2 <- ordinate(physeq4, "PCoA", "bray")
-# ordination of all ASVs by Phylum
-p8 = plot_ordination(physeq4, ASVord2, type = "taxa", color = "Phylum", title = "ordination by Phylum - PCoA")
-print(p8) # difference to p1 ???
-p8 + facet_wrap(~"substrate")
-
-p9 = plot_ordination(physeq4, ASVord2, type="taxa", color="substrate", title="ordination by tree type - PCoA") 
-p9 + facet_wrap(~Phylum, 3)
-
-
-#########################Alb############################
-
-#PCA (RDA) ordination
-ordination_A <- ordinate(physeqAlb, "RDA")
-ordination_A_rel <- ordinate(ps_rel_abund_A, "RDA")
-
-#ordinations look different depending on rel. abundance or counts
-
-#ordination of ASVs by Phylum -> no clustering
-p1 = plot_ordination(physeqAlb, ordination_A, type = "taxa", color = "Phylum", title = "taxa")
-p1 = plot_ordination(ps_rel_abund_A, ordination_A_rel, type = "taxa", color = "Phylum", title = "taxa")
-print(p1)
-
-#ordination by dominant_tree -> no clustering
-p2 = plot_ordination(physeqAlb, ordination_A, type="sample", color="dominant_tree")
-p2 = plot_ordination(ps_rel_abund_A, ordination_A_rel, type="sample", color="dominant_tree")
-print(p2)
-
-#ordination by substrate -> clustering
-p3 = plot_ordination(physeqAlb, ordination_A, type="sample", color="substrate")
-p3 = plot_ordination(ps_rel_abund_A, ordination_A_rel, type="sample", color="substrate")
-print(p3)
-
-#ordination by ForMIclass -> no clustering
-p4 = plot_ordination(physeqAlb, ordination_A, type="sample", color="ForMIclass")
-p4 = plot_ordination(ps_rel_abund_A, ordination_A_rel, type="sample", color="ForMIclass")
-print(p4)
-
-###approach Ollberding (preferred)#
-
-##ordination with PCA -> CLR transformation -> values are not counts but dominance
-ps_clr_A <- microbiome::transform(physeqAlb, "clr")  
-phyloseq::otu_table(ps_clr_A)[1:5,1:5]
-#PCA via phyloseq
-ordination_clr_A <- phyloseq::ordinate(ps_clr_A, "RDA")
-
-################################
-#20220517 Ordination as NMDS
-ordination_A_NMDS <- ordinate(physeqAlb, "NMDS")
-ordination_clr_NMDS <- phyloseq::ordinate(ps_clr_A, "NMDS")
-phyloseq::plot_ordination(physeqAlb, ordination_A_NMDS, type="samples", color="dominant_tree", shape="substrate") + 
-  geom_jitter(size = 4) +
-  stat_ellipse(aes(group = dominant_tree), linetype = 2) +
-  scale_colour_manual(values = c("green","darkgreen"), name = "dominant tree species", 
-                      labels = c("Fagus sylvatica", "Picea abies"))+
-  theme(legend.text = element_text(face = "italic", size = 15), legend.title = element_text(size = 15, face = "bold")) +
-  theme(legend.position = "bottom",legend.direction = "vertical")+
-  theme(legend.spacing = unit(2,"cm")) +
-  theme(axis.text = element_text(size = 15)) +
-  theme(axis.title = element_text(size = 15))
-
-
-ordination_S_NMDS <- ordinate(physeqSchorf, "NMDS")
-phyloseq::plot_ordination(physeqSchorf, ordination_S_NMDS, type="samples", color="dominant_tree", shape="substrate") + 
+# Plot the ordination. 
+ordination_alb <- phyloseq::plot_ordination(physeq_alb, nmds_alb, type="samples", color="dominant_tree", shape="substrate") + 
   geom_point(size = 4) +
   stat_ellipse(aes(group = dominant_tree), linetype = 2) +
   scale_colour_manual(values = c("green","darkgreen"), name = "dominant tree species", 
-                      labels = c("Fagus sylvatica", "Pinus sylvestris"))+
-  theme(legend.text = element_text(face = "italic", size = 15), legend.title = element_text(size = 15, face = "bold")) +
-  theme(legend.position = "bottom",legend.direction = "vertical")+
-  theme(legend.spacing = unit(2,"cm")) +
-  theme(axis.text = element_text(size = 15)) +
-  theme(axis.title = element_text(size = 15))
-
-#20220726 - change ordination color
-phyloseq::plot_ordination(physeqAlb, ordination_A_NMDS, type="samples", color="dominant_tree", shape="substrate") + 
-  geom_jitter(size = 4) +
-  stat_ellipse(aes(group = dominant_tree), linetype = 2) +
-  scale_colour_manual(values = c("black","azure4"), name = "dominant tree species", 
                       labels = c("Fagus sylvatica", "Picea abies"))+
-  theme(legend.text = element_text(face = "italic", size = 20), legend.title = element_text(size = 20, face = "bold")) +
-  theme(legend.position = "bottom",legend.direction = "vertical")+
-  theme(legend.spacing = unit(2,"cm")) +
-  theme(axis.text = element_text(size = 20)) +
-  theme(axis.title = element_text(size = 20))
+  labs(subtitle = "(A) Swabian Alb") +
+  theme(legend.position = "none",
+        axis.text = element_text(size = 15),
+        axis.title = element_text(size = 15))
 
-phyloseq::plot_ordination(physeqSchorf, ordination_S_NMDS, type="samples", color="dominant_tree", shape="substrate") + 
+# Ordinate the Schorfheide-Chorin phyloseq using an NMDS with Bray-Curtis distance.
+nmds_sch <- phyloseq::ordinate(physeq_sch, method = "NMDS", distance = "bray")
+
+# Plot the ordination.
+ordination_sch <- phyloseq::plot_ordination(physeq_sch, nmds_sch, type="samples", color="dominant_tree", shape="substrate") + 
   geom_point(size = 4) +
   stat_ellipse(aes(group = dominant_tree), linetype = 2) +
-  scale_colour_manual(values = c("black","azure4"), name = "dominant tree species", 
-                      labels = c("Fagus sylvatica", "Pinus sylvestris"))+
-  theme(legend.text = element_text(face = "italic", size = 20), legend.title = element_text(size = 20, face = "bold")) +
-  theme(legend.position = "bottom",legend.direction = "vertical")+
-  theme(legend.spacing = unit(2,"cm")) +
-  theme(axis.text = element_text(size = 20)) +
-  theme(axis.title = element_text(size = 20))
+  scale_colour_manual(values = c("green","darkolivegreen4"), name = "dominant tree species", 
+                      labels = c("Fagus sylvatica", "Pinus sylvestris")) +
+  labs(subtitle = "(B) Schorfheide-Chorin") +
+  theme(legend.position = "none",
+        axis.text = element_text(size = 15), 
+        axis.title = element_text(size = 15))
 
-#######################################
-###20220808 - variance partitioning#####
-########################################
+# Run the ordination on the full dataset to grab a nice legend. 
+nmds_full <- phyloseq::ordinate(filtered_physeq, method = "NMDS", distance = "bray")
+ordination_full <- phyloseq::plot_ordination(filtered_physeq, nmds_full, type="samples", color="dominant_tree", shape="substrate") + 
+  geom_point(size = 4) +
+  stat_ellipse(aes(group = dominant_tree), linetype = 2) +
+  scale_colour_manual(values = c("green", "darkgreen", "darkolivegreen4"), name = "tree species", 
+                      labels = c("Fagus sylvatica","Picea abies", "Pinus sylvestris")) +
+  theme(legend.text = element_text(face = "italic", size = 15),
+        legend.title = element_text(size = 15, face = "bold"),
+        legend.position = "right",
+        legend.direction = "vertical",
+        legend.spacing = unit(2,"cm"),
+        axis.text = element_text(size = 15), 
+        axis.title = element_text(size = 15))
 
-#define extract OTU table function
+# Extract the legend and store it as a ggplot object. 
+ordination_legend <- ggpubr::get_legend(ordination_full)
+
+# Combine the figures into one plot. 
+ggpubr::ggarrange(ordination_alb, ordination_sch,
+                  ncol = 1, nrow = 2,
+                  legend = "right", legend.grob = ordination_legend)
+
+#################################################################
+##                          Section 5                          ##
+##                    Variance partitioning                    ##
+#################################################################
+
+# Function to extract an otu_table from a phyloseq object in the right format for vegan::varpart.
 veganotu = function(physeq) {
   require("vegan")
   OTU = otu_table(physeq)
@@ -883,325 +392,34 @@ veganotu = function(physeq) {
   return(as(OTU, "matrix"))
 }
 
-###Swabian Alb###
+################Swabian Alb###########################
 
-#extract OTU table Alb
-Y <- veganotu(physeqAlb)
-#extract sample data and remove sample ID (sample)
-dat <- data.frame(sample_data(physeqAlb))
-dat <- dat[,-1]
-dat
+# Extract OTU table Alb.
+otu_alb <- veganotu(physeq_alb)
 
-######approach davidzeleny#####
+# Extract the sample data.
+data_alb <- data.frame(sample_data(physeq_alb))
 
-##varpar Alb
-#fractions dominant_tree + substrate Alb
-rda.all <- rda(Y ~ substrate + dominant_tree, data = dat)
-#fraction dominant_tree
-rda.tree <- rda(Y ~ dominant_tree, data = dat)
-#fraction substrate Alb
-rda.substrate <- rda(Y ~ substrate, data = dat)
-#calculate variations Alb
-# variation substrate + dominant_tree Alb
-RsquareAdj(rda.all)
-#$r.squared
-#[1] 0.100239
-#$adj.r.squared
-#[1] 0.0802443
-tree_substrate_Alb <- RsquareAdj(rda.all)$adj.r.squared
-#variation dominant_tree Alb
-RsquareAdj(rda.tree)
-#$r.squared
-#[1] 0.03106127
-#$adj.r.squared
-#[1] 0.0204136
-tree_Alb <- RsquareAdj(rda.tree)$adj.r.squared
-# variation substrate Alb
-RsquareAdj(rda.substrate)
-#$r.squared
-#[1] 0.06912488
-#$adj.r.squared
-#[1] 0.05889548
-substrate_Alb <- RsquareAdj(rda.substrate)$adj.r.squared
+# Get the variation with vegan::varpart.
+varp_alb <- vegan::varpart(otu_alb, ~ substrate, ~ dominant_tree, data = data_alb)
 
-#shared variation Alb
-shared_var <- substrate_Alb + tree_Alb - tree_substrate_Alb #-0.0009352148 - negative value possible? Betrag?
-shared_var_2 <- tree_substrate_Alb - substrate_Alb - tree_Alb
-# variation substrate Alb
-substrate_var <- substrate_Alb - shared_var_2 # 0.05796027
-# variation tree Alb
-tree_var <- tree_Alb - shared_var_2 # 0.01947838
+adj_r_alb <- varp_alb$part$indfract$Adj.R.squared
 
-# variation with varpart function Alb
-varp <- varpart(Y, ~ substrate, ~ dominant_tree, data = dat)
-varp
-
-#plot venn diagramm variation Alb
-plot(varp, digits = 2, Xnames = c("substrate", "tree species"), bg = c("navy", "hotpink"))
 
 ### Schorfheide ###
 
-#extract OTU table Schorf
-Z <- veganotu(physeqSchorf)
-#extract sample data and remove sample ID (sample)
-dat2 <- data.frame(sample_data(physeqSchorf))
-dat2 <- dat2[,-1]
-dat2
+# Extract OTU table Schorfheide.
+otu_sch <- veganotu(physeq_sch)
 
-######approach davidzeleny#####
+# Extract sample data.
+data_sch <- data.frame(sample_data(physeq_sch))
 
-##varpar Schorf
-#fractions dominant_tree + substrate Schorf
-rda.all_Schorf <- rda(Z ~ substrate + dominant_tree, data = dat2)
-#fraction dominant_tree Schorf
-rda.tree_Schorf <- rda(Z ~ dominant_tree, data = dat2)
-#fraction substrate Schorf
-rda.substrate_Schorf <- rda(Z ~ substrate, data = dat2)
-#calculate variations Schorf
-# variation substrate + dominant_tree Schorf
-RsquareAdj(rda.all_Schorf)
-#$r.squared
-#[1] 0.1790991
-#$adj.r.squared
-#[1] 0.1595538
-tree_substrate_Schorf <- RsquareAdj(rda.all_Schorf)$adj.r.squared
-#variation dominant_tree Schorf
-RsquareAdj(rda.tree_Schorf)
-#$r.squared
-#[1] 0.02713039
-#$adj.r.squared
-#[1] 0.01568487
-tree_Schorf <- RsquareAdj(rda.tree_Schorf)$adj.r.squared
-# variation substrate Schorf
-RsquareAdj(rda.substrate_Schorf)
-#$r.squared
-#[1] 0.1519012
-#$adj.r.squared
-#[1] 0.1419236
-substrate_Schorf <- RsquareAdj(rda.substrate_Schorf)$adj.r.squared
+# Get the variation with vegan::varpart.
+varp_sch <- varpart(otu_sch, ~ substrate, ~ dominant_tree, data = data_sch)
 
-#shared variation Schorf
-shared_var_Schorf <- substrate_Schorf + tree_Schorf - tree_substrate_Schorf #-0.001945349
-# variation substrate Schorf
-substrate_var_Schorf <- substrate_Schorf - shared_var_Schorf # 0.143869
-# variation tree Schorf
-tree_var_Schorf <- tree_Schorf - shared_var_Schorf # 0.01763022
-
-# variation with varpart function Schorf
-varp_Schorf <- varpart(Z, ~ substrate, ~ dominant_tree, data = dat2)
-varp_Schorf
-
-#plot venn diagramm variation Schorf
-plot(varp_Schorf, digits = 2, Xnames = c("substrate", "tree species"), bg = c("navy", "hotpink"))
-
-#anova testing Schorf
-#fraction substrate Schorf
-rda.substrate.tree_Schorf <- rda(Z ~ substrate + Condition (dominant_tree), data = dat2)
-#fraction tree Schorf
-rda.tree.substrate_Schorf <- rda(Z ~ dominant_tree + Condition (substrate), data = dat2)
-#test individual fractions
-anova(rda.all_Schorf) #***
-anova(rda.substrate_Schorf)#***
-anova(rda.tree_Schorf) #** - p 0.008
-anova(rda.substrate.tree_Schorf) #***
-anova(rda.tree.substrate_Schorf) #***
+adj_r_sch <- varp_sch$part$indfract$Adj.R.squared
 
 
-
-
-
-##determine the influence of PCs
-#Plot scree plot -> shows proportion of variance per PC
-phyloseq::plot_scree(ordination_clr_A) + 
-  geom_bar(stat="identity", fill = "blue") +
-  labs(x = "\nAxis", y = "Proportion of Variance\n")
-#Examine eigenvalues and % prop. variance explained
-head(ordination_clr_A$CA$eig)
-sapply(ordination_clr_A$CA$eig[1:5], function(x) x / sum(ordination_clr_A$CA$eig))
-
-#Scale axes
-clr1A <- ordination_clr_A$CA$eig[1] / sum(ordination_clr_A$CA$eig)
-clr2A <- ordination_clr_A$CA$eig[2] / sum(ordination_clr_A$CA$eig)
-
-#Generate distance matrix
-clr_dist_matrix_A <- phyloseq::distance(ps_clr_A, method = "euclidean") 
-
-#ordination by substrate
-phyloseq::plot_ordination(physeqAlb, ordination_clr_A, type="samples", color="substrate", shape="dominant_tree") + 
-  geom_point(size = 2) +
-  coord_fixed(clr2A / clr1A) +
-  stat_ellipse(aes(group = substrate), linetype = 2)
-
-#ADONIS test
-vegan::adonis(clr_dist_matrix_A ~ phyloseq::sample_data(ps_clr_A)$substrate)
-vegan::adonis(clr_dist_matrix_A ~ phyloseq::sample_data(ps_clr_A)$substrate * dominant_tree)
-#Dispersion test and plot -> plot with distances to centroid
-dispr_A <- vegan::betadisper(clr_dist_matrix_A, phyloseq::sample_data(ps_clr_A)$substrate)
-dispr_A
-plot(dispr_A, main = "Ordination Centroids and Dispersion Labeled: Aitchison Distance", sub = "")
-#boxplot distance to centroid
-boxplot(dispr_A, main ="", xlab = "")
-#permutation test
-permutest(dispr_A)
-
-#ordination by dominant_tree
-phyloseq::plot_ordination(physeqAlb, ordination_clr_A, type="samples", color="dominant_tree", shape="substrate") + 
-  geom_point(size = 2) +
-  coord_fixed(clr2A / clr1A) +
-  stat_ellipse(aes(group = dominant_tree), linetype = 2) +
-  scale_colour_manual(values = c("green","darkgreen"), name = "dominant tree species", 
-                      labels = c("Fagus sylvatica", "Picea abies"))+
-  theme(legend.text = element_text(face = "italic", size = 12), legend.title = element_text(size = 12, face = "bold")) +
-  theme(legend.position = "bottom",legend.direction = "vertical")+
-  theme(legend.spacing = unit(2,"cm"))
-ggsave(
-  "PCA_Alb.png",
-  width = 8.3,
-  height = 5.7,
-  dpi = 800
-)  
-
-
-#ADONIS test
-vegan::adonis(clr_dist_matrix_A ~ phyloseq::sample_data(ps_clr_A)$dominant_tree)
-#Dispersion test and plot -> plot with distances to centroid
-dispr_A <- vegan::betadisper(clr_dist_matrix_A, phyloseq::sample_data(ps_clr_A)$dominant_tree)
-dispr_A
-plot(dispr_A, main = "Ordination Centroids and Dispersion Labeled: Aitchison Distance", sub = "")
-#boxplot distance to centroid
-boxplot(dispr_A, main ="", xlab = "")
-#permutation test
-permutest(dispr_A)
-
-#ordination by ForMIclass -> no clustering
-phyloseq::plot_ordination(physeqAlb, ordination_clr_A, type="samples", color="ForMIclass") + 
-  geom_point(size = 2) +
-  coord_fixed(clr2A / clr1A) +
-  stat_ellipse(aes(group = ForMIclass), linetype = 2)
-
-##phylogenetic information in beta diversity - PCoA analysis
-#generate distances
-ord_unifrac <- ordinate(physeqAlb, method = "PCoA", distance = "wunifrac") 
-ord_unifrac_un <- ordinate(physeqAlb, method = "PCoA", distance = "unifrac")
-#Plot ordinations
-a <- plot_ordination(physeqAlb, ord_unifrac, color = "substrate") + geom_point(size = 2)
-b <- plot_ordination(physeqAlb, ord_unifrac_un, color = "substrate") + geom_point(size = 2)
-cowplot::plot_grid(a, b, nrow = 1, ncol = 2, scale = .9, labels = c("Weighted", "Unweighted"))
-# idea: create cowplot for substrate + dominant_tree
-
-
-######################Schorfheide#######################
-
-#PCA (RDA) ordination
-ordination_S <- ordinate(physeqSchorf, "RDA")
-ordination_S_rel <- ordinate(ps_rel_abund_S, "RDA")
-
-#ordinations look different depending on rel. abundance or counts
-
-#ordination of ASVs by Phylum -> no clustering
-#p5 = plot_ordination(physeqSchorf, ordination_S, type = "taxa", color = "Phylum", title = "taxa")
-p5 = plot_ordination(ps_rel_abund_S, ordination_S_rel, type = "taxa", color = "Phylum", title = "taxa")
-print(p5)
-
-#ordination by dominant_tree -> no clustering
-#p6 = plot_ordination(physeqSchorf, ordination_S, type="sample", color="dominant_tree")
-p6 = plot_ordination(ps_rel_abund_S, ordination_S_rel, type="sample", color="dominant_tree")
-print(p6)
-
-#ordination by substrate -> clustering
-#p7 = plot_ordination(physeqSchorf, ordination_S, type="sample", color="substrate")
-p7 = plot_ordination(ps_rel_abund_S, ordination_S_rel, type="sample", color="substrate")
-print(p7)
-
-#ordination by ForMIclass -> no clustering
-#p8 = plot_ordination(physeqSchorf, ordination_S, type="sample", color="ForMIclass")
-p8 = plot_ordination(ps_rel_abund_S, ordination_S_rel, type="sample", color="ForMIclass")
-print(p8)
-
-###approach Ollberding (preferred)#
-
-##ordination with PCA -> CLR transformation -> values are not counts but dominance
-ps_clr_S <- microbiome::transform(physeqSchorf, "clr")  
-phyloseq::otu_table(ps_clr_S)[1:5,1:5]
-#PCA via phyloseq
-ordination_clr_S <- phyloseq::ordinate(ps_clr_S, "RDA")
-
-##determine the influence of PCs
-#Plot scree plot -> shows proportion of variance per PC
-phyloseq::plot_scree(ordination_clr_S) + 
-  geom_bar(stat="identity", fill = "blue") +
-  labs(x = "\nAxis", y = "Proportion of Variance\n")
-#Examine eigenvalues and % prop. variance explained
-head(ordination_clr_S$CA$eig)
-sapply(ordination_clr_S$CA$eig[1:5], function(x) x / sum(ordination_clr_S$CA$eig))
-
-#Scale axes
-clr1S <- ordination_clr_S$CA$eig[1] / sum(ordination_clr_S$CA$eig)
-clr2S <- ordination_clr_S$CA$eig[2] / sum(ordination_clr_S$CA$eig)
-
-#Generate distance matrix
-clr_dist_matrix_S <- phyloseq::distance(ps_clr_S, method = "euclidean")
-
-#ordination by substrate
-phyloseq::plot_ordination(physeqSchorf, ordination_clr_S, type="samples", color="substrate", shape="dominant_tree") + 
-  geom_point(size = 2) +
-  coord_fixed(clr2S / clr1S) +
-  stat_ellipse(aes(group = substrate), linetype = 2)
-
-#ADONIS test
-vegan::adonis(clr_dist_matrix_S ~ phyloseq::sample_data(ps_clr_S)$substrate)
-#Dispersion test and plot -> plot with distances to centroid
-dispr_S <- vegan::betadisper(clr_dist_matrix_S, phyloseq::sample_data(ps_clr_S)$substrate)
-dispr_S
-plot(dispr_S, main = "Ordination Centroids and Dispersion Labeled: Aitchison Distance", sub = "")
-#boxplot distance to centroid
-boxplot(dispr_S, main ="", xlab = "")
-#permutation test
-permutest(dispr_S)
-
-#ordination by dominant_tree
-phyloseq::plot_ordination(physeqSchorf, ordination_clr_S, type="samples", color="dominant_tree", shape="substrate") + 
-  geom_point(size = 2) +
-  coord_fixed(clr2S / clr1S) +
-  stat_ellipse(aes(group = dominant_tree), linetype = 2) +
-  scale_colour_manual(values = c("green","darkgreen"), name = "dominant tree species",
-                      labels = c("Fagus sylvatica", "Pinus sylvestris")) +
-  theme(legend.text = element_text(face = "italic", size = 12), legend.title = element_text(size = 12, face = "bold")) +
-  theme(legend.position = "bottom",legend.direction = "vertical")+
-  theme(legend.spacing = unit(2,"cm"))
-ggsave(
-  "PCA_Schorf.png",
-  width = 8.3,
-  height = 5.7,
-  dpi = 800
-)  
-
-#ADONIS test
-vegan::adonis(clr_dist_matrix_S ~ phyloseq::sample_data(ps_clr_S)$dominant_tree)
-#Dispersion test and plot -> plot with distances to centroid
-dispr_S <- vegan::betadisper(clr_dist_matrix_S, phyloseq::sample_data(ps_clr_S)$dominant_tree)
-dispr_S
-plot(dispr_S, main = "Ordination Centroids and Dispersion Labeled: Aitchison Distance", sub = "")
-#boxplot distance to centroid
-boxplot(dispr_S, main ="", xlab = "")
-#permutation test
-permutest(dispr_S)
-
-#ordination by ForMIclass -> no clustering
-phyloseq::plot_ordination(physeqSchorf, ordination_clr_S, type="samples", color="ForMIclass") + 
-  geom_point(size = 2) +
-  coord_fixed(clr2S / clr1S) +
-  stat_ellipse(aes(group = ForMIclass), linetype = 2)
-
-##phylogenetic information in beta diversity - PCoA analysis
-#generate distances
-ord_unifrac <- ordinate(physeqSchorf, method = "PCoA", distance = "wunifrac") 
-ord_unifrac_un <- ordinate(physeqSchorf, method = "PCoA", distance = "unifrac")
-#Plot ordinations
-a <- plot_ordination(physeqSchorf, ord_unifrac, color = "substrate") + geom_point(size = 2)
-b <- plot_ordination(physeqSchorf, ord_unifrac_un, color = "substrate") + geom_point(size = 2)
-cowplot::plot_grid(a, b, nrow = 1, ncol = 2, scale = .9, labels = c("Weighted", "Unweighted"))
-# idea: create cowplot for substrate + dominant_tree
 
 ######################################################
 ############overlap analysis - Venn diagrams#################
