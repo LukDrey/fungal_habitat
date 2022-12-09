@@ -187,6 +187,21 @@ physeq_sch_bark <- phyloseq::subset_samples(physeq_sch, substrate == "bark") %>%
 physeq_sch_soil <- phyloseq::subset_samples(physeq_sch, substrate == "soil") %>% 
   phyloseq::prune_taxa(phyloseq::taxa_sums(.) > 0,.)
 
+# Split the phyloseqobject by exploratories & the tree species. 
+# Swabian Alb
+physeq_alb_fagus <- phyloseq::subset_samples(physeq_alb, dominant_tree == "Fagus_sylvatica") %>% 
+  phyloseq::prune_taxa(phyloseq::taxa_sums(.) > 0,.)
+
+physeq_alb_picea <- phyloseq::subset_samples(physeq_alb, dominant_tree == "Picea_abies") %>% 
+  phyloseq::prune_taxa(phyloseq::taxa_sums(.) > 0,.)
+
+# Schorfheide Chorin
+physeq_sch_fagus <- phyloseq::subset_samples(physeq_sch, dominant_tree == "Fagus_sylvatica") %>% 
+  phyloseq::prune_taxa(phyloseq::taxa_sums(.) > 0,.)
+
+physeq_sch_pinus <- phyloseq::subset_samples(physeq_sch, dominant_tree == "Pinus_sylvestris") %>% 
+  phyloseq::prune_taxa(phyloseq::taxa_sums(.) > 0,.)
+
 # Split the phyloseq object into the two exploratories & the substrate & the tree species.
 # Swabian Alb
 physeq_alb_bark_fagus <- phyloseq::subset_samples(physeq_alb_bark, dominant_tree == "Fagus_sylvatica") %>% 
@@ -224,23 +239,23 @@ physeq_sch_soil_pinus <- phyloseq::subset_samples(physeq_sch_soil, dominant_tree
 
 # Create a sample_data column containing a column that corresponds to tree species and substrate.
 physeq_alb_curve <- physeq_alb
-sample_data(physeq_alb_curve) <- sample_data(physeq_alb) %>% 
-  data.frame() %>%  
-  mutate(tree_substrate = paste(dominant_tree, substrate, sep = "-"))
+phyloseq::sample_data(physeq_alb_curve) <- phyloseq::sample_data(physeq_alb) %>% 
+  base::data.frame() %>%  
+  dplyr::mutate(tree_substrate = base::paste(dominant_tree, substrate, sep = "-"))
 
 # Create rarefaction curve and color the lines by substrate (bark/soil) and host tree species. 
-rare_alb <- ggrare(physeq_alb_curve, step = 50, color = "tree_substrate", se = FALSE)
+rare_alb <- ranacapa::ggrare(physeq_alb_curve, step = 50, color = "tree_substrate", se = FALSE)
 
 ################Schorfheide###########################
 
 # Create a sample_data column containing a column that corresponds to tree species and substrate.
 physeq_sch_curve <- physeq_sch
-sample_data(physeq_sch_curve) <- sample_data(physeq_sch) %>% 
-  data.frame() %>%  
-  mutate(tree_substrate = paste(dominant_tree, substrate, sep = "-"))
+phyloseq::sample_data(physeq_sch_curve) <- phyloseq::sample_data(physeq_sch) %>% 
+  base::data.frame() %>%  
+  dplyr::mutate(tree_substrate = base::paste(dominant_tree, substrate, sep = "-"))
 
 # Create rarefaction curve and color the lines by substrate (bark/soil) and host tree species. 
-rare_sch <- ggrare(physeq_sch_curve, step = 50, color = "tree_substrate", se = FALSE)
+rare_sch <- ranacapa::ggrare(physeq_sch_curve, step = 50, color = "tree_substrate", se = FALSE)
 
 
 #################################################################
@@ -255,7 +270,7 @@ shannon_alb <- phyloseq::estimate_richness(physeq_alb, split = T, measures = 'Sh
   tibble::rownames_to_column()
 
 # Extract the sample data to append it.
-sample_data_alb <- data.frame(sample_data(physeq_alb)) %>% 
+sample_data_alb <- base::data.frame(phyloseq::sample_data(physeq_alb)) %>% 
   tibble::rownames_to_column()
 
 # Append sample_data to get the information on tree and substrate. 
@@ -266,23 +281,23 @@ div_data_alb <- dplyr::left_join(shannon_alb, sample_data_alb)
 # bark vs soil
 bark_alb = div_data_alb[div_data_alb$substrate == "bark",]
 soil_alb = div_data_alb[div_data_alb$substrate == "soil",]
-wilcox.test(bark_alb$Shannon, soil_alb$Shannon)
+stats::wilcox.test(bark_alb$Shannon, soil_alb$Shannon)
 
 # Differences between tree species within the substrate.
 # bark Fagus vs. Picea
 bark_fagus_alb = bark_alb[bark_alb$dominant_tree == "Fagus_sylvatica",]
 bark_picea_alb = bark_alb[bark_alb$dominant_tree == "Picea_abies",]
-wilcox.test(bark_fagus_alb$Shannon, bark_picea_alb$Shannon)
+stats::wilcox.test(bark_fagus_alb$Shannon, bark_picea_alb$Shannon)
 
 # soil Fagus vs. Picea
 soil_fagus_alb = soil_alb[soil_alb$dominant_tree == "Fagus_sylvatica",]
 soil_picea_alb = soil_alb[soil_alb$dominant_tree == "Picea_abies",]
-wilcox.test(soil_fagus_alb$Shannon, soil_picea_alb$Shannon)
+stats::wilcox.test(soil_fagus_alb$Shannon, soil_picea_alb$Shannon)
 
 # Full Fagus vs. Picea Swabian Alb not subset by substrate
 fagus_alb = div_data_alb[div_data_alb$dominant_tree == "Fagus_sylvatica",]
 picea_alb = div_data_alb[div_data_alb$dominant_tree == "Picea_abies",]
-wilcox.test(fagus_alb$Shannon, picea_alb$Shannon)
+stats::wilcox.test(fagus_alb$Shannon, picea_alb$Shannon)
 
 ################Schorfheide-Chorin###########################
 
@@ -291,7 +306,7 @@ shannon_sch <- phyloseq::estimate_richness(physeq_sch, split = T, measures = 'Sh
   tibble::rownames_to_column()
 
 # Extract the sample data to append it.
-sample_data_sch <- data.frame(sample_data(physeq_sch)) %>% 
+sample_data_sch <- base::data.frame(phyloseq::sample_data(physeq_sch)) %>% 
   tibble::rownames_to_column()
 
 # Append sample_data to get the information on tree and substrate. 
@@ -302,23 +317,23 @@ div_data_sch <- dplyr::left_join(shannon_sch, sample_data_sch)
 # bark vs soil
 bark_sch = div_data_sch[div_data_sch$substrate == "bark",]
 soil_sch = div_data_sch[div_data_sch$substrate == "soil",]
-wilcox.test(bark_sch$Shannon, soil_sch$Shannon)
+stats::wilcox.test(bark_sch$Shannon, soil_sch$Shannon)
 
 # Differences between tree species within the substrate.
 # bark Fagus vs. Picea
 bark_fagus_sch = bark_sch[bark_sch$dominant_tree == "Fagus_sylvatica",]
 bark_pinus_sch = bark_sch[bark_sch$dominant_tree == "Pinus_sylvestris",]
-wilcox.test(bark_fagus_sch$Shannon, bark_pinus_sch$Shannon)
+stats::wilcox.test(bark_fagus_sch$Shannon, bark_pinus_sch$Shannon)
 
 # soil Fagus vs. Picea
 soil_fagus_sch = soil_sch[soil_sch$dominant_tree == "Fagus_sylvatica",]
 soil_pinus_sch = soil_sch[soil_sch$dominant_tree == "Pinus_sylvestris",]
-wilcox.test(soil_fagus_sch$Shannon, soil_pinus_sch$Shannon)
+stats::wilcox.test(soil_fagus_sch$Shannon, soil_pinus_sch$Shannon)
 
 # Full Fagus vs. Picea Swabian sch not subset by substrate
 fagus_sch = div_data_sch[div_data_sch$dominant_tree == "Fagus_sylvatica",]
 pinus_sch = div_data_sch[div_data_sch$dominant_tree == "Pinus_sylvestris",]
-wilcox.test(fagus_sch$Shannon, pinus_sch$Shannon)
+stats::wilcox.test(fagus_sch$Shannon, pinus_sch$Shannon)
 
 #################################################################
 ##                          Section 4                          ##
@@ -331,51 +346,58 @@ nmds_alb <- phyloseq::ordinate(physeq_alb, method = "NMDS", distance = "bray")
 
 # Plot the ordination. 
 ordination_alb <- phyloseq::plot_ordination(physeq_alb, nmds_alb, type="samples", color="dominant_tree", shape="substrate") + 
-  geom_point(size = 4) +
-  stat_ellipse(aes(group = dominant_tree), linetype = 2) +
-  scale_colour_manual(values = c("green","darkgreen"), name = "dominant tree species", 
-                      labels = c("Fagus sylvatica", "Picea abies"))+
-  labs(subtitle = "(A) Swabian Alb") +
-  theme(legend.position = "none",
-        axis.text = element_text(size = 15),
-        axis.title = element_text(size = 15))
+  ggplot2::geom_point(size = 4) +
+  ggplot2::stat_ellipse(ggplot2::aes(group = dominant_tree), linetype = 2) +
+  ggplot2::scale_colour_manual(values = c("green","darkgreen"), name = "dominant tree species",
+                               labels = c("Fagus sylvatica", "Picea abies")) +
+  ggplot2::labs(subtitle = "(A) Swabian Alb") +
+  ggplot2::theme(legend.position = "none",
+        axis.text = ggplot2::element_text(size = 15),
+        axis.title = ggplot2::element_text(size = 15))
+
+ordination_alb
 
 # Ordinate the Schorfheide-Chorin phyloseq using an NMDS with Bray-Curtis distance.
 nmds_sch <- phyloseq::ordinate(physeq_sch, method = "NMDS", distance = "bray")
 
 # Plot the ordination.
 ordination_sch <- phyloseq::plot_ordination(physeq_sch, nmds_sch, type="samples", color="dominant_tree", shape="substrate") + 
-  geom_point(size = 4) +
-  stat_ellipse(aes(group = dominant_tree), linetype = 2) +
-  scale_colour_manual(values = c("green","darkolivegreen4"), name = "dominant tree species", 
-                      labels = c("Fagus sylvatica", "Pinus sylvestris")) +
-  labs(subtitle = "(B) Schorfheide-Chorin") +
-  theme(legend.position = "none",
-        axis.text = element_text(size = 15), 
-        axis.title = element_text(size = 15))
+  ggplot2::geom_point(size = 4) +
+  ggplot2::stat_ellipse(ggplot2::aes(group = dominant_tree), linetype = 2) +
+  ggplot2::scale_colour_manual(values = c("green","darkolivegreen4"), name = "dominant tree species",
+                               labels = c("Fagus sylvatica", "Pinus sylvestris")) +
+  ggplot2::labs(subtitle = "(B) Schorfheide-Chorin") +
+  ggplot2::theme(legend.position = "none",
+        axis.text = ggplot2::element_text(size = 15), 
+        axis.title = ggplot2::element_text(size = 15))
+
+ordination_sch
 
 # Run the ordination on the full dataset to grab a nice legend. 
 nmds_full <- phyloseq::ordinate(filtered_physeq, method = "NMDS", distance = "bray")
+
 ordination_full <- phyloseq::plot_ordination(filtered_physeq, nmds_full, type="samples", color="dominant_tree", shape="substrate") + 
-  geom_point(size = 4) +
-  stat_ellipse(aes(group = dominant_tree), linetype = 2) +
-  scale_colour_manual(values = c("green", "darkgreen", "darkolivegreen4"), name = "tree species", 
-                      labels = c("Fagus sylvatica","Picea abies", "Pinus sylvestris")) +
-  theme(legend.text = element_text(face = "italic", size = 15),
-        legend.title = element_text(size = 15, face = "bold"),
+  ggplot2::geom_point(size = 4) +
+  ggplot2::stat_ellipse(ggplot2::aes(group = dominant_tree), linetype = 2) +
+  ggplot2::scale_colour_manual(values = c("green", "darkgreen", "darkolivegreen4"), name = "tree species",
+                               labels = c("Fagus sylvatica","Picea abies", "Pinus sylvestris")) +
+  ggplot2::theme(legend.text = ggplot2::element_text(face = "italic", size = 15),
+        legend.title = ggplot2::element_text(size = 15, face = "bold"),
         legend.position = "right",
         legend.direction = "vertical",
-        legend.spacing = unit(2,"cm"),
-        axis.text = element_text(size = 15), 
-        axis.title = element_text(size = 15))
+        legend.spacing = ggplot2::unit(2,"cm"),
+        axis.text = ggplot2::element_text(size = 15), 
+        axis.title = ggplot2::element_text(size = 15))
+
+ordination_full
 
 # Extract the legend and store it as a ggplot object. 
 ordination_legend <- ggpubr::get_legend(ordination_full)
 
 # Combine the figures into one plot. 
-ggpubr::ggarrange(ordination_alb, ordination_sch,
-                  ncol = 1, nrow = 2,
-                  legend = "right", legend.grob = ordination_legend)
+ordination_final <- ggpubr::ggarrange(ordination_alb, ordination_sch,
+                                      ncol = 1, nrow = 2,
+                                      legend = "right", legend.grob = ordination_legend)
 
 #################################################################
 ##                          Section 5                          ##
@@ -385,8 +407,8 @@ ggpubr::ggarrange(ordination_alb, ordination_sch,
 # Function to extract an otu_table from a phyloseq object in the right format for vegan::varpart.
 veganotu = function(physeq) {
   require("vegan")
-  OTU = otu_table(physeq)
-  if (taxa_are_rows(OTU)) {
+  OTU = phyloseq::otu_table(physeq)
+  if (phyloseq::taxa_are_rows(OTU)) {
     OTU = t(OTU)
   }
   return(as(OTU, "matrix"))
@@ -398,13 +420,16 @@ veganotu = function(physeq) {
 otu_alb <- veganotu(physeq_alb)
 
 # Extract the sample data.
-data_alb <- data.frame(sample_data(physeq_alb))
+data_alb <- base::data.frame(phyloseq::sample_data(physeq_alb))
 
 # Get the variation with vegan::varpart.
 varp_alb <- vegan::varpart(otu_alb, ~ substrate, ~ dominant_tree, data = data_alb)
 
-adj_r_alb <- varp_alb$part$indfract$Adj.R.squared
+indfract_adj_r_alb <- varp_alb$part$indfract$Adj.R.squared
+indfract_adj_r_alb
 
+fract_adj_r_alb <- varp_alb$part$fract$Adj.R.squared
+fract_adj_r_alb
 
 ### Schorfheide ###
 
@@ -412,165 +437,166 @@ adj_r_alb <- varp_alb$part$indfract$Adj.R.squared
 otu_sch <- veganotu(physeq_sch)
 
 # Extract sample data.
-data_sch <- data.frame(sample_data(physeq_sch))
+data_sch <- base::data.frame(phyloseq::sample_data(physeq_sch))
 
 # Get the variation with vegan::varpart.
-varp_sch <- varpart(otu_sch, ~ substrate, ~ dominant_tree, data = data_sch)
+varp_sch <- vegan::varpart(otu_sch, ~ substrate, ~ dominant_tree, data = data_sch)
 
-adj_r_sch <- varp_sch$part$indfract$Adj.R.squared
+indfract_adj_r_sch <- varp_sch$part$indfract$Adj.R.squared
+indfract_adj_r_sch
 
-
+fract_adj_r_sch <- varp_sch$part$fract$Adj.R.squared
+fract_adj_r_sch
 
 ######################################################
 ############overlap analysis - Venn diagrams#################
 ######################################################
 
-##########soil & bark per exploratory##################
-
-ps_venn(physeqAlb, group = "dominant_tree", fraction = 0, weight = TRUE, relative = TRUE, plot = TRUE)
-ps_venn(physeqSchorf, group = "dominant_tree", fraction = 0, weight = FALSE, relative = TRUE, plot = TRUE)
-
 #####################Alb#######################
+###
+# Venn diagrams by host tree species. 
+###
 
-#plot soil Alb
-ps_venn(physeqAlb_s, group = "dominant_tree", fraction = 0, weight = TRUE, relative = TRUE, plot = TRUE,
-        fill = c("green","mediumseagreen"),labels = list(labels =c("Fagus sylvatica", "Picea abies"),cex=1.6,font=list(face=3)),
-        quantities = list(type=c("percent"), labels = c("\n19% (3592)","\n9% (1198)","\n71% (1277)"), cex=1.6))
-#png(filename="venn_Alb_soil.png", res=800, width = 1600, height = 900)
+# Check the absolute number of tree per category.
+MicEco::ps_venn(physeq_alb_soil, group = "dominant_tree", fraction = 0, weight = F, relative = F, plot = TRUE)
 
-#list soil Alb
-ps_venn(physeqAlb_s, group = "dominant_tree", fraction = 0, weight = FALSE, relative = TRUE, plot = FALSE)
+# Check the relative number of tree per category.
+MicEco::ps_venn(physeq_alb_soil, group = "dominant_tree", fraction = 0, weight = T, relative = T, plot = TRUE)
 
-#plot bark Alb
-ps_venn(physeqAlb_b, group = "dominant_tree", fraction = 0, weight = TRUE, relative = TRUE, plot = TRUE,
-        fill = c("green","mediumseagreen"), labels = list(labels =c("Fagus sylvatica", "Picea abies"),cex=1.6,font=list(face=3)),
-        quantities = list(type=c("percent"), labels = c("\n11% (697)","\n7% (341)","\n82% (279)"), cex=1.6))
-#list bark Alb
-ps_venn(physeqAlb_b, group = "dominant_tree", fraction = 0, weight = FALSE, relative = TRUE, plot = FALSE)
+# Plot the final plot. 
+venn_soil_alb <- MicEco::ps_venn(physeq_alb_soil, group = "dominant_tree", 
+                                 fraction = 0, weight = F, relative = TRUE, plot = TRUE,
+                                 fill = c("green","mediumseagreen"),
+                                 labels = list(labels =c("Fagus sylvatica", "Picea abies"),
+                                               cex=1.6, font=list(face=3)),
+                                 quantities = list(type=c("percent"), 
+                                                   labels = c("\n19% (3153)","\n9% (1025)","\n71% (1199)"), cex=1.6))
+venn_soil_alb
 
-#combined by venn_class
-#plot venn_class Alb
-ps_venn(physeqAlb, group = "venn_class", fraction = 0, weight = FALSE, relative = TRUE, plot = TRUE,
-        main = "Venn Diagram - F.sylvatica & P.abies - Alb", fill = c("green","darkolivegreen2","darkgreen","darkolivegreen"))
-ps_venn(physeqAlb, group = "venn_class", fraction = 0, weight = FALSE, relative = TRUE, plot = TRUE,
-        main = "Venn Diagram - F.sylvatica & P.abies - Alb", fill = c("green","darkolivegreen2","darkgreen","darkolivegreen"))
+#Check the absolute number of tree per category.
+MicEco::ps_venn(physeq_alb_bark, group = "dominant_tree", fraction = 0, weight = F, relative = F, plot = TRUE)
 
+#Check the relative number of tree per category.
+MicEco::ps_venn(physeq_alb_bark, group = "dominant_tree", fraction = 0, weight = T, relative = T, plot = TRUE)
 
-###lists of venn_class Alb
-shared_taxa_A <-ps_venn(physeqAlb, group = "venn_class", fraction = 0, weight = TRUE, relative = TRUE, plot = FALSE,
-                      quantities = list(type=c("percent")))
-fagus_bark_only_A <- data.frame("ASV_ID" = shared_taxa_A$F.sylvatica_bark)
-fagus_soil_only_A <- data.frame("ASV_ID" = shared_taxa_A$F.sylvatica_soil)
-fagus_soil_bark_A <- data.frame("ASV_ID" = shared_taxa_A$F.sylvatica_bark__F.sylvatica_soil)
-fagus_specialists_A <- rbind(fagus_bark_only_A,fagus_soil_only_A,fagus_soil_bark_A)
-fagus_specialists_A
-picea_bark_only_A <- data.frame("ASV_ID"= shared_taxa_A$P.abies_bark)
-picea_soil_only_A <- data.frame("ASV_ID"=shared_taxa_A$P.abies_soil)
-picea_soil_bark_A <- data.frame("ASV_ID" =shared_taxa_A$F.sylvatica_soil__P.abies_bark__P.abies_soil)
-picea_specialists_A <- rbind(picea_bark_only_A, picea_soil_only_A, picea_soil_bark_A)
-overlap_all_A <- data.frame("ASV_ID" = shared_taxa_A$F.sylvatica_bark__F.sylvatica_soil__P.abies_bark__P.abies_soil)
-tax_Alb <- data.frame(tax_table(physeqAlb))
-tax_Alb
-tax_Alb1 <- rownames_to_column(tax_Alb, var = "ASV_ID") %>% as_tibble()
-tax_Alb1
-generalists_Alb <- left_join(overlap_all_A,tax_Alb1, by = "ASV_ID")
-generalists_Alb
-write.csv(generalists_Alb, "C:/Users/behof/Desktop/MSc Umweltwissenschaften/Master Thesis/data_analysis/generalists_Alb.csv")
-specialists_fagus_Alb <- left_join(fagus_specialists_A,tax_Alb1, by = "ASV_ID")
-write.csv(specialists_fagus_Alb, "C:/Users/behof/Desktop/MSc Umweltwissenschaften/Master Thesis/data_analysis/specialists_fagus_Alb.csv")
-specialists_picea_Alb <- left_join(picea_specialists_A, tax_Alb1, by = "ASV_ID")
-write.csv(specialists_picea_Alb, "C:/Users/behof/Desktop/MSc Umweltwissenschaften/Master Thesis/data_analysis/specialists_picea_Alb.csv")
+# Plot the final plot. 
+venn_bark_alb <- MicEco::ps_venn(physeq_alb_bark, group = "dominant_tree",
+                                 fraction = 0, weight = F, relative = F, plot = TRUE,
+                                 fill = c("green","mediumseagreen"),
+                                 labels = list(labels =c("Fagus sylvatica", "Picea abies"),
+                                               cex=1.6,font=list(face=3)),
+                                 quantities = list(type=c("percent"),
+                                                   labels = c("\n13% (602)","\n9% (299)","\n78% (228)"), cex=1.6))
+venn_bark_alb
 
-#count data + relative abundance
-ps_venn(physeqAlb, group = "venn_class", fraction = 0, weight = TRUE, relative = TRUE, plot = TRUE,
-        main = "Venn Diagram - F.sylvatica & P.abies - Alb", fill = c("green","darkolivegreen2","darkgreen","darkolivegreen"),
-        quantities = list(type=c("percent")))
+###
+# Venn diagrams by substrate.  
+###
 
-#count data + relative abundance (manual)
-ps_venn(physeqAlb, group = "venn_class", fraction = 0, weight = TRUE, relative = TRUE, plot = TRUE,
-        main = "Venn Diagram - F.sylvatica & P.abies - Alb \n weighted by abundance", fill = c("green","darkolivegreen2","darkgreen","darkolivegreen"),
-        quantities = list(type=c("percent"), labels = c("4% (478)","7% (3405)","3% (256)","4% (1137)",
-                                                        "3% (123)","8% (134)","<1% (8)","<1% (22)","17% (1076)","<1% (25)","12% (42)",
-                                                        "7% (88)","6% (28)","2% (38)","26% (75)")))
+# Check the absolute number of tree per category.
+MicEco::ps_venn(physeq_alb_fagus, group = "substrate", fraction = 0, weight = F, relative = F, plot = TRUE)
 
+# Check the relative number of tree per category.
+MicEco::ps_venn(physeq_alb_fagus, group = "substrate", fraction = 0, weight = T, relative = T, plot = TRUE)
+
+# Plot the final plot. 
+venn_fagus_alb <- MicEco::ps_venn(physeq_alb_fagus, group = "substrate",
+                                  fraction = 0, weight = F, relative = F, plot = TRUE,
+                                  fill = c("green","mediumseagreen"),
+                                  labels = list(labels =c("Fagus bark", "Fagus soil"),
+                                                cex=1.6,font=list(face=3)),
+                                  quantities = list(type=c("percent"),
+                                                    labels = c("\n15% (520)","\n29% (4042)","\n56% (310)"), cex=1.6))
+venn_fagus_alb
+
+# Check the absolute number of tree per category.
+MicEco::ps_venn(physeq_alb_picea, group = "substrate", fraction = 0, weight = F, relative = F, plot = TRUE)
+
+# Check the relative number of tree per category.
+MicEco::ps_venn(physeq_alb_picea, group = "substrate", fraction = 0, weight = T, relative = T, plot = TRUE)
+
+# Plot the final plot. 
+venn_picea_alb <- MicEco::ps_venn(physeq_alb_picea, group = "substrate",
+                                  fraction = 0, weight = F, relative = F, plot = TRUE,
+                                  fill = c("green","mediumseagreen"),
+                                  labels = list(labels =c("Picea bark", "Picea soil"),
+                                                cex=1.6,font=list(face=3)),
+                                  quantities = list(type=c("percent"),
+                                                    labels = c("\n28% (378)","\n37% (2075)","\n35% (149)"), cex=1.6))
+venn_picea_alb
 
 #####################Schorfheide#######################
+###
+# Venn diagrams by host tree species. 
+###
 
-#plot soil Schorfheide
-ps_venn(physeqSchorf_s, group = "dominant_tree", fraction = 0, weight = TRUE, relative = TRUE, plot = TRUE,
-        main = "Venn Diagram - soil - Schorfheide", fill = c("green","darkgreen"))
-ps_venn(physeqSchorf_s, group = "dominant_tree", fraction = 0, weight = TRUE, relative = TRUE, plot = TRUE,
-        fill = c("green","mediumseagreen"), labels = list(labels =c("Fagus sylvatica", "Pinus sylvestris"),cex=1.6,font=list(face=3)),
-        quantities = list(type=c("percent"), labels= c("\n8% (1412)", "\n4% (814)", "\n88% (885)"),cex=1.6))
-#list soil Schorfheide
-ps_venn(physeqSchorf_s, group = "dominant_tree", fraction = 0, weight = FALSE, relative = TRUE, plot = FALSE)
+# Check the absolute number of tree per category.
+MicEco::ps_venn(physeq_sch_soil, group = "dominant_tree", fraction = 0, weight = F, relative = F, plot = TRUE)
 
-#plot bark Schorfheide
-ps_venn(physeqSchorf_b, group = "dominant_tree", fraction = 0, weight = TRUE, relative = TRUE, plot = TRUE,
-        fill = c("green","mediumseagreen"),  labels = list(labels =c("Fagus sylvatica", "Pinus sylvestris"),cex=1.6,font=list(face=3)),  
-        quantities = list(type=c("percent"),labels = c("\n3% (478)", "\n7% (228)", "\n89% (202)"),cex =1.6))
-ps_venn(physeqSchorf_b, group = "dominant_tree", fraction = 0.05, weight = TRUE, relative = TRUE, plot = TRUE,
-        main = "Venn Diagram - bark - Schorfheide", fill = c("green","darkgreen"))
-#list bark Schorfheide
-ps_venn(physeqSchorf_b, group = "dominant_tree", fraction = 0, weight = FALSE, relative = TRUE, plot = FALSE)
+# Check the relative number of tree per category.
+MicEco::ps_venn(physeq_sch_soil, group = "dominant_tree", fraction = 0, weight = T, relative = T, plot = TRUE)
 
-#combined by venn_class
-#plot venn_class Schorfheide
-ps_venn(physeqSchorf, group = "venn_class", fraction = 0, weight = FALSE, relative = TRUE, plot = TRUE,
-        main = "Venn Diagram - F.sylvatica & P.sylvestris - Schorfheide", fill = c("green","darkolivegreen2","darkgreen","darkolivegreen"))
-ps_venn(physeqSchorf, group = "venn_class", fraction = 0, weight = TRUE, relative = TRUE, plot = TRUE,
-        main = "Venn Diagram - F.sylvatica & P.sylvestris - Schorfheide", fill = c("green","darkolivegreen2","darkgreen","darkolivegreen"),
-        quantities = list(type=c("percent")))
+# Plot the final plot. 
+venn_soil_sch <- MicEco::ps_venn(physeq_sch_soil, group = "dominant_tree", 
+                                 fraction = 0, weight = F, relative = TRUE, plot = TRUE,
+                                 fill = c("green","mediumseagreen"),
+                                 labels = list(labels =c("Fagus sylvatica", "Pinus sylvestris"),
+                                               cex=1.6, font=list(face=3)),
+                                 quantities = list(type=c("percent"), 
+                                                   labels = c("\n8% (1282)","\n4% (734)","\n88% (838)"), cex=1.6))
+venn_soil_sch
 
-###lists of venn_class Alb
-shared_taxa_S <-ps_venn(physeqSchorf, group = "venn_class", fraction = 0, weight = TRUE, relative = TRUE, plot = FALSE,
-                        quantities = list(type=c("percent")))
-shared_taxa_S
-fagus_bark_only_S <- data.frame("ASV_ID" = shared_taxa_S$F.sylvatica_bark)
-fagus_soil_only_S <- data.frame("ASV_ID" = shared_taxa_S$F.sylvatica_soil)
-fagus_soil_bark_S <- data.frame("ASV_ID" = shared_taxa_S$F.sylvatica_bark__F.sylvatica_soil)
-fagus_specialists_S <- rbind(fagus_bark_only_S,fagus_soil_only_S,fagus_soil_bark_S)
-fagus_specialists_S
-pinus_bark_only_S <- data.frame("ASV_ID"= shared_taxa_S$P.sylvestris_bark)
-pinus_soil_only_S <- data.frame("ASV_ID"=shared_taxa_S$P.sylvestris_soil)
-pinus_soil_bark_S <- data.frame("ASV_ID" =shared_taxa_S$P.sylvestris_bark__P.sylvestris_soil)
-pinus_specialists_S <- rbind(pinus_bark_only_S, pinus_soil_only_S, pinus_soil_bark_S)
-overlap_all_S <- data.frame("ASV_ID" = shared_taxa_S$F.sylvatica_bark__F.sylvatica_soil__P.sylvestris_bark__P.sylvestris_soil)
-overlap_all_S
-tax_Schorf <- data.frame(tax_table(physeqSchorf))
-tax_Schorf
-tax_Schorf1 <- rownames_to_column(tax_Schorf, var = "ASV_ID") %>% as_tibble()
-tax_Schorf1
-generalists_Schorf <- left_join(overlap_all_S,tax_Schorf1, by = "ASV_ID")
-generalists_Schorf
-write.csv(generalists_Schorf, "C:/Users/behof/Desktop/MSc Umweltwissenschaften/Master Thesis/data_analysis/generalists_Schorf.csv")
-specialists_fagus_Schorf <- left_join(fagus_specialists_S,tax_Schorf1, by = "ASV_ID")
-write.csv(specialists_fagus_Schorf, "C:/Users/behof/Desktop/MSc Umweltwissenschaften/Master Thesis/data_analysis/specialists_fagus_Schorf.csv")
-specialists_pinus_Schorf <- left_join(pinus_specialists_S, tax_Schorf1, by = "ASV_ID")
-write.csv(specialists_pinus_Schorf, "C:/Users/behof/Desktop/MSc Umweltwissenschaften/Master Thesis/data_analysis/specialists_pinus_Schorf.csv")
+#Check the absolute number of tree per category.
+MicEco::ps_venn(physeq_sch_bark, group = "dominant_tree", fraction = 0, weight = F, relative = F, plot = TRUE)
 
+#Check the relative number of tree per category.
+MicEco::ps_venn(physeq_sch_bark, group = "dominant_tree", fraction = 0, weight = T, relative = T, plot = TRUE)
 
-#count data + relative abundance (manual)
-# plot layout: width 800, height 900
-ps_venn(physeqSchorf, group = "venn_class", fraction = 0, weight = TRUE, relative = TRUE, plot = TRUE,
-        main = "Venn Diagram - F.sylvatica & P.sylvestris - Schorfheide \n weighted by abundance", 
-        fill = c("green","darkolivegreen2","darkgreen","darkolivegreen"),
-        quantities = list(type=c("percent"), labels = c("1% (338)","3% (1312)","3% (175)","2% (778)",
-                                                        "<1% (62)","10% (111)","3% (13)","<1% (14)","16% (737)","<1% (10)","5% (24)",
-                                                        "6% (65)","3% (13)","3% (29)","46% (54)")))
+# Plot the final plot. 
+venn_bark_sch <- MicEco::ps_venn(physeq_sch_bark, group = "dominant_tree",
+                                 fraction = 0, weight = F, relative = F, plot = TRUE,
+                                 fill = c("green","mediumseagreen"),
+                                 labels = list(labels =c("Fagus sylvatica", "Pinus sylvestris"),
+                                               cex=1.6,font=list(face=3)),
+                                 quantities = list(type=c("percent"),
+                                                   labels = c("\n4% (411)","\n8% (198)","\n88% (162)"), cex=1.6))
+venn_bark_sch
 
-#list venn_class Schorfheide
-ps_venn(physeqSchorf, group = "venn_class", fraction = 0, weight = FALSE, relative = TRUE, plot = FALSE)
+###
+# Venn diagrams by substrate.  
+###
 
+# Check the absolute number of tree per category.
+MicEco::ps_venn(physeq_sch_fagus, group = "substrate", fraction = 0, weight = F, relative = F, plot = TRUE)
 
-#####################Alb + Schorfheide#######################
-#plot Alb+Schorfheide (all substrates)
-ps_venn(physeq5, group = "tree_type", fraction = 0, weight = FALSE, relative = TRUE, plot = TRUE,
-        main = "Venn Diagram - soil + bark - Alb + Schorfheide", fill = c("darkgreen","green"))
+# Check the relative number of tree per category.
+MicEco::ps_venn(physeq_sch_fagus, group = "substrate", fraction = 0, weight = T, relative = T, plot = TRUE)
 
+# Plot the final plot. 
+venn_fagus_sch <- MicEco::ps_venn(physeq_sch_fagus, group = "substrate",
+                                  fraction = 0, weight = F, relative = F, plot = TRUE,
+                                  fill = c("green","mediumseagreen"),
+                                  labels = list(labels =c("Fagus bark", "Fagus soil"),
+                                                cex=1.6,font=list(face=3)),
+                                  quantities = list(type=c("percent"),
+                                                    labels = c("\n10% (379)","\n24% (1926)","\n66% (194)"), cex=1.6))
+venn_fagus_sch
 
+# Check the absolute number of tree per category.
+MicEco::ps_venn(physeq_sch_pinus, group = "substrate", fraction = 0, weight = F, relative = F, plot = TRUE)
 
+# Check the relative number of tree per category.
+MicEco::ps_venn(physeq_sch_pinus, group = "substrate", fraction = 0, weight = T, relative = T, plot = TRUE)
 
+# Plot the final plot. 
+venn_pinus_sch <- MicEco::ps_venn(physeq_sch_pinus, group = "substrate",
+                                  fraction = 0, weight = F, relative = F, plot = TRUE,
+                                  fill = c("green","mediumseagreen"),
+                                  labels = list(labels =c("Pinus bark", "Pinus soil"),
+                                                cex=1.6,font=list(face=3)),
+                                  quantities = list(type=c("percent"),
+                                                    labels = c("\n22% (261)","\n29% (1473)","\n49% (99)"), cex=1.6))
+venn_pinus_sch
 
 #######################################################################
 #########statistical analysis of microbiome data######################
