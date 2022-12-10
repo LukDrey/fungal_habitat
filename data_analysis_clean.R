@@ -448,9 +448,29 @@ indfract_adj_r_sch
 fract_adj_r_sch <- varp_sch$part$fract$Adj.R.squared
 fract_adj_r_sch
 
-######################################################
-############overlap analysis - Venn diagrams#################
-######################################################
+div_labels <- c("\u03B1-Diversity", "\u03B2-Diversity")
+
+ggpubr::ggbarplot(variance_full, x = "q_lev", y = "variance", 
+                  fill = "variable", color = "variable", palette = alpha(c("#999999", "#E69F00", "#56B4E9", "#009E73",
+                                                                           "#F0E442", "#0072B2", "#D55E00", "#CC79A7"),
+                                                                         alpha = 0.9)) +
+  ggplot2::facet_grid(organism ~ div_lev, space="free", scales="free", switch = "y") +
+  ggplot2::scale_x_discrete(position = "top") +
+  ggplot2::geom_hline(aes(yintercept = 0), linetype = "dashed") +
+  ggplot2::coord_flip() + 
+  ggplot2::ylab("Explained Variance") + 
+  ggplot2::theme(text = element_text(size = 15),
+                 legend.title = element_blank(),
+                 legend.position = "right",
+                 axis.title.y = element_blank(),
+                 axis.line.y = element_blank(), 
+                 axis.ticks.y = element_blank())
+
+
+#################################################################
+##                          Section 6                          ##
+##                        Venn diagrams                        ##
+#################################################################
 
 #####################Alb#######################
 ###
@@ -597,6 +617,198 @@ venn_pinus_sch <- MicEco::ps_venn(physeq_sch_pinus, group = "substrate",
                                   quantities = list(type=c("percent"),
                                                     labels = c("\n22% (261)","\n29% (1473)","\n49% (99)"), cex=1.6))
 venn_pinus_sch
+
+#################################################################
+##                          Section 7                          ##
+##              Community Composition Barplots                 ##
+#################################################################
+my_cols <- paletteer::paletteer_d('ggsci::default_igv')
+
+############## Swabian Alb ###############
+physeq_alb_barplot <- physeq_alb
+phyloseq::sample_data(physeq_alb_barplot) <- phyloseq::sample_data(physeq_alb) %>% 
+  base::data.frame() %>%  
+  dplyr::mutate(tree_substrate = base::paste(dominant_tree, substrate, sep = "-"))
+
+
+# Subset the phyloseq object to the top 24 orders and put the rest in 
+# a category "Others", based on relative abundance. 
+phy_alb_ord_top25 <- fantaxtic::top_taxa(physeq_alb_barplot,
+                                         tax_level = 'Order',
+                                         n_taxa =  24,
+                                         by_proportion = TRUE,
+                                         merged_label = "Other",
+                                         include_na_taxa = T) 
+phy_alb_ord_top25_named <- fantaxtic::name_na_taxa(phy_alb_ord_top25$ps_obj, include_rank = T)
+
+# Transform the subset dataset to compositional (relative) abundances.
+phy_alb_ord_top25_named_plot <-  phy_alb_ord_top25_named %>%
+  microbiome::aggregate_taxa(level = "Order") %>%  
+  microbiome::transform(transform = "compositional") 
+
+# Extract the names of the Orders.
+taxa_names(phy_alb_ord_top25_named_plot) <- tax_table(phy_alb_ord_top25_named_plot)[, 4]
+
+# Sort the taxa names alphabetically. 
+taxa_names_alb_ord <- sort(taxa_names(phy_alb_ord_top25_named_plot))
+
+# To get our desired plotting order and group names we need to change 
+# the exploratory names and order them as factors.
+sampledata_fungi <- data.frame(sample_data(phy_alb_ord_top25_named_plot))
+sampledata_fungi <- sampledata_fungi %>% 
+  mutate_at("tree_substrate",funs(str_replace(., "Fagus_sylvatica-bark", "F. sylvatica bark"))) %>% 
+  mutate_at("tree_substrate",funs(str_replace(., "Fagus_sylvatica-soil", "F. sylvatica soil"))) %>% 
+  mutate_at("tree_substrate",funs(str_replace(., "Picea_abies-bark", "P. abies bark"))) %>% 
+  mutate_at("tree_substrate",funs(str_replace(., "Picea_abies-soil", "P. abies soil"))) 
+sampledata_fungi$tree_substrate <- factor(sampledata_fungi$tree_substrate, 
+                                       levels = c("F. sylvatica bark", "P. abies bark",
+                                                  "F. sylvatica soil", "P. abies soil"))  
+
+sample_data(phy_alb_ord_top25_named_plot) <- sample_data(sampledata_fungi)
+
+# Custom plotting to make a nice stacked barplot. 
+alb_ord_plots <- phy_alb_ord_top25_named_plot %>%
+  microbiome::plot_composition(group_by =  'tree_substrate', otu.sort = taxa_names_alb_ord) +
+  scale_fill_manual(values = ggplot2::alpha(my_cols, 0.9), name = 'Order') +
+  guides(fill = guide_legend(title.position = 'top')) +
+  theme(panel.grid.major.x = element_blank(), 
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.line = element_blank(),
+        axis.ticks = element_line(colour = 'black', size = 0.5),
+        axis.text.x =  element_blank(),
+        axis.text.y =  element_text(colour = "black", size = 10),
+        axis.title = element_text(colour = "black", size = 10),
+        legend.position = 'bottom', 
+        plot.title = element_text(vjust = -4, hjust = 0.03), 
+        legend.text = element_text(colour = 'black', size = 7),
+        legend.title =  element_text(size = 10),
+        legend.key.size = unit(2.5, 'mm'),
+        axis.ticks.length.x = unit(-0.2, "cm"), 
+        legend.box.spacing = unit(-4, 'mm'),
+        legend.background = element_rect(fill = 'transparent'),
+        text = element_text(colour = 'black')) + 
+  xlab('Sample') +
+  ylab('Relative Abundance')   + 
+  labs( subtitle = 'Swabian Alb')
+alb_ord_plots
+
+
+############## Schorfheide-Chorin ###############
+physeq_sch_barplot <- physeq_sch
+phyloseq::sample_data(physeq_sch_barplot) <- phyloseq::sample_data(physeq_sch) %>% 
+  base::data.frame() %>%  
+  dplyr::mutate(tree_substrate = base::paste(dominant_tree, substrate, sep = "-"))
+
+
+# Subset the phyloseq object to the top 24 orders and put the rest in 
+# a category "Others", based on relative abundance. 
+phy_sch_ord_top25 <- fantaxtic::top_taxa(physeq_sch_barplot,
+                                         tax_level = 'Order',
+                                         n_taxa =  24,
+                                         by_proportion = TRUE,
+                                         merged_label = "Other",
+                                         include_na_taxa = T) 
+phy_sch_ord_top25_named <- fantaxtic::name_na_taxa(phy_sch_ord_top25$ps_obj, include_rank = T)
+
+# Transform the subset dataset to compositional (relative) abundances.
+phy_sch_ord_top25_named_plot <-  phy_sch_ord_top25_named %>%
+  microbiome::aggregate_taxa(level = "Order") %>%  
+  microbiome::transform(transform = "compositional") 
+
+# Extract the names of the Orders.
+taxa_names(phy_sch_ord_top25_named_plot) <- tax_table(phy_sch_ord_top25_named_plot)[, 4]
+
+# Sort the taxa names alphabetically. 
+taxa_names_sch_ord <- sort(taxa_names(phy_sch_ord_top25_named_plot))
+
+# To get our desired plotting order and group names we need to change 
+# the exploratory names and order them as factors.
+sampledata_fungi <- data.frame(sample_data(phy_sch_ord_top25_named_plot))
+sampledata_fungi <- sampledata_fungi %>% 
+  mutate_at("tree_substrate",funs(str_replace(., "Fagus_sylvatica-bark", "F. sylvatica bark"))) %>% 
+  mutate_at("tree_substrate",funs(str_replace(., "Fagus_sylvatica-soil", "F. sylvatica soil"))) %>% 
+  mutate_at("tree_substrate",funs(str_replace(., "Pinus_sylvestris-bark", "P. sylvestris bark"))) %>% 
+  mutate_at("tree_substrate",funs(str_replace(., "Pinus_sylvestris-soil", "P. sylvestris soil"))) 
+sampledata_fungi$tree_substrate <- factor(sampledata_fungi$tree_substrate, 
+                                          levels = c("F. sylvatica bark", "P. sylvestris bark",
+                                                     "F. sylvatica soil", "P. sylvestris soil"))  
+
+sample_data(phy_sch_ord_top25_named_plot) <- sample_data(sampledata_fungi)
+
+# Custom plotting to make a nice stacked barplot. 
+sch_ord_plots <- phy_sch_ord_top25_named_plot %>%
+  microbiome::plot_composition(group_by =  'tree_substrate', otu.sort = taxa_names_sch_ord) +
+  scale_fill_manual(values = ggplot2::alpha(my_cols, 0.9), name = 'Order') +
+  guides(fill = guide_legend(title.position = 'top')) +
+  theme(panel.grid.major.x = element_blank(), 
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.line = element_blank(),
+        axis.ticks = element_line(colour = 'black', size = 0.5),
+        axis.text.x =  element_blank(),
+        axis.text.y =  element_text(colour = "black", size = 10),
+        axis.title = element_text(colour = "black", size = 10),
+        legend.position = 'bottom', 
+        plot.title = element_text(vjust = -4, hjust = 0.03), 
+        legend.text = element_text(colour = 'black', size = 7),
+        legend.title =  element_text(size = 10),
+        legend.key.size = unit(2.5, 'mm'),
+        axis.ticks.length.x = unit(-0.2, "cm"), 
+        legend.box.spacing = unit(-4, 'mm'),
+        legend.background = element_rect(fill = 'transparent'),
+        text = element_text(colour = 'black')) + 
+  xlab('Sample') +
+  ylab('Relative Abundance')   + 
+  labs( subtitle = 'Schorfheide-Chorin')
+sch_ord_plots
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #######################################################################
 #########statistical analysis of microbiome data######################
