@@ -8,3 +8,7 @@
 *.fa
 *.csv
 *.png
+*.gz
+*.gephi
+*.RData
+*.gexf
