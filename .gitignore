@@ -12,3 +12,5 @@
 *.gephi
 *.RData
 *.gexf
+*.tiff
+*.svg

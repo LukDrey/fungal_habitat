@@ -7,27 +7,17 @@ library(phyloseq)
 
 library(ggplot2)
 
-library(ggvenn)
-
 library(MicEco)
 
 library(tidyverse)
 
-library(ape)
-
-library(rstatix)
-
 library(ggpubr)
-
-library(ggdist)
 
 library(vegan)
 
 library(paletteer)
 
 library(ranacapa)
-
-library(devtools)
 
 library(fantaxtic)
 
@@ -39,27 +29,7 @@ library(igraph)
 
 library(here)
 
-library(xlsx)
-
-library(dplyr)
-
-library(rlang)
-
-library(metamicrobiomeR) 
-
-library(remotes)
-
 library(microbiome)
-
-library(gghalves)
-
-library(viridis)
-
-library(pals)
-
-library(influential)
-
-library(ade4)
 
 ##################################################################
 ##                          Section 2                           ##
@@ -403,7 +373,87 @@ ordination_final <- ggpubr::ggarrange(ordination_alb, ordination_sch,
 ##                          Section 5                          ##
 ##                    Variance partitioning                    ##
 #################################################################
+##---------------------------------------------------------------
+##                          Section 5.1                         -
+##                        Alpha Diversity                       -
+##---------------------------------------------------------------
 
+################Swabian Alb###########################
+
+# Remind us of the table we created earlier cotaining our metadata and shannon diversity.
+head(div_data_alb)
+
+# Create linear models lm of our alpha diversity measure explained by tree and substrate. 
+lm_full_alb <- lm(Shannon ~ dominant_tree + substrate, 
+                  data = div_data_alb, na.action = "na.fail")
+
+base::summary(lm_full_alb)  
+base::plot(effects::allEffects(lm_full_alb))
+
+# Check model fit. Looks okay. 
+base::plot(stats::residuals(lm_full_alb), stats::fitted(lm_full_alb))
+stats::qqnorm(stats::residuals(lm_full_alb))
+stats::qqline(stats::residuals(lm_full_alb))
+
+# Now create linear models of the explanatory variables alone.  
+lm_substrate_alb <- lm(Shannon ~ substrate, 
+                  data = div_data_alb, na.action = "na.fail")
+
+lm_tree_alb <- lm(Shannon ~ dominant_tree, 
+                  data = div_data_alb, na.action = "na.fail")
+
+# Now partition the variance. 
+alb_variance_lm <- modEvA::varPart(A = summary(lm_substrate_alb)$r.squared,
+                                 B = summary(lm_tree_alb)$r.squared,
+                                 AB = summary(lm_full_alb)$r.squared,
+                                 A.name = "Substrate",
+                                 B.name = "Tree") %>% 
+  mutate(across(Proportion, round, 3)) %>% 
+  tibble::rownames_to_column() %>%  
+  tibble::add_column(variable = c("Substrate", "Dominant tree", "Overlap", "Unexplained")) %>% 
+  dplyr::select(variable, Proportion)
+alb_variance_lm
+
+################Schorfheide-Chorin###########################
+
+# Remind us of the table we created earlier cotaining our metadata and shannon diversity.
+head(div_data_sch)
+
+# Create linear models lm of our alpha diversity measure explained by tree and substrate. 
+lm_full_sch <- lm(Shannon ~ dominant_tree + substrate, 
+                  data = div_data_sch, na.action = "na.fail")
+
+base::summary(lm_full_sch)  
+base::plot(effects::allEffects(lm_full_sch))
+
+# Check model fit. Looks okay. 
+base::plot(stats::residuals(lm_full_sch), stats::fitted(lm_full_sch))
+stats::qqnorm(stats::residuals(lm_full_sch))
+stats::qqline(stats::residuals(lm_full_sch))
+
+# Now create linear models of the explanatory variables alone.  
+lm_substrate_sch <- lm(Shannon ~ substrate, 
+                       data = div_data_sch, na.action = "na.fail")
+
+lm_tree_sch <- lm(Shannon ~ dominant_tree, 
+                  data = div_data_sch, na.action = "na.fail")
+
+# Now partition the variance. 
+sch_variance_lm <- modEvA::varPart(A = summary(lm_substrate_sch)$r.squared,
+                                   B = summary(lm_tree_sch)$r.squared,
+                                   AB = summary(lm_full_sch)$r.squared,
+                                   A.name = "Substrate",
+                                   B.name = "Tree") %>% 
+  mutate(across(Proportion, round, 3)) %>% 
+  tibble::rownames_to_column() %>%  
+  tibble::add_column(variable = c("Substrate", "Dominant tree", "Overlap", "Unexplained")) %>% 
+  dplyr::select(variable, Proportion)
+sch_variance_lm
+
+##---------------------------------------------------------------
+##                          Section 5.2                         -
+##                         Beta Diversity                       -
+##---------------------------------------------------------------
 # Function to extract an otu_table from a phyloseq object in the right format for vegan::varpart.
 veganotu = function(physeq) {
   require("vegan")
@@ -425,11 +475,14 @@ data_alb <- base::data.frame(phyloseq::sample_data(physeq_alb))
 # Get the variation with vegan::varpart.
 varp_alb <- vegan::varpart(otu_alb, ~ substrate, ~ dominant_tree, data = data_alb)
 
-indfract_adj_r_alb <- varp_alb$part$indfract$Adj.R.squared
+indfract_adj_r_alb <- varp_alb$part$indfract %>% 
+  tibble::rownames_to_column()  %>%  
+  tibble::add_column(variable = c("Substrate", "Overlap", "Dominant tree", "Unexplained")) %>% 
+  dplyr::select(variable, Adj.R.squared) %>% 
+  dplyr::rename(Proportion = Adj.R.squared) %>% 
+  dplyr::mutate(across(Proportion, .fns = round, 3))
+  
 indfract_adj_r_alb
-
-fract_adj_r_alb <- varp_alb$part$fract$Adj.R.squared
-fract_adj_r_alb
 
 ### Schorfheide ###
 
@@ -442,19 +495,61 @@ data_sch <- base::data.frame(phyloseq::sample_data(physeq_sch))
 # Get the variation with vegan::varpart.
 varp_sch <- vegan::varpart(otu_sch, ~ substrate, ~ dominant_tree, data = data_sch)
 
-indfract_adj_r_sch <- varp_sch$part$indfract$Adj.R.squared
+indfract_adj_r_sch <- varp_sch$part$indfract %>% 
+  tibble::rownames_to_column()  %>%  
+  tibble::add_column(variable = c("Substrate", "Overlap", "Dominant tree", "Unexplained")) %>% 
+  dplyr::select(variable, Adj.R.squared) %>% 
+  dplyr::rename(Proportion = Adj.R.squared) %>% 
+  dplyr::mutate(across(Proportion, .fns = round, 3))
+
 indfract_adj_r_sch
 
-fract_adj_r_sch <- varp_sch$part$fract$Adj.R.squared
-fract_adj_r_sch
+##---------------------------------------------------------------
+##                          Section 5.3                         -
+##                            Plotting                          -
+##---------------------------------------------------------------
+
+# Combine alpha into one dataframe 
+
+alb_variance_alpha <- alb_variance_lm  %>% 
+  cbind(div_lev = rep("\u03B1-Diversity", nrow(alb_variance_lm))) %>% 
+  cbind(exploratory = rep("Swabian Alb", nrow(alb_variance_lm)))
+
+sch_variance_alpha <- sch_variance_lm  %>% 
+  cbind(div_lev = rep("\u03B1-Diversity", nrow(sch_variance_lm))) %>% 
+  cbind(exploratory = rep("Schorfheide-Chorin", nrow(sch_variance_lm)))
+
+variance_lm <- rbind(alb_variance_alpha, sch_variance_alpha) %>% 
+  dplyr::rename(variance = Proportion) %>% 
+  dplyr::mutate(variance = (variance * 100))
+
+# Combine beta into one dataframe 
+
+alb_variance_nmds <- indfract_adj_r_alb  %>% 
+  cbind(div_lev = rep("\u03B2-Diversity", nrow(indfract_adj_r_alb))) %>% 
+  cbind(exploratory = rep("Swabian Alb", nrow(indfract_adj_r_alb)))
+
+sch_variance_nmds <- indfract_adj_r_sch  %>% 
+  cbind(div_lev = rep("\u03B2-Diversity", nrow(indfract_adj_r_sch))) %>% 
+  cbind(exploratory = rep("Schorfheide-Chorin", nrow(indfract_adj_r_sch)))
+
+variance_beta <- rbind(alb_variance_nmds, sch_variance_nmds) %>% 
+  dplyr::rename(variance = Proportion) %>% 
+  dplyr::mutate(variance = (variance * 100))
+
+variance_full <- rbind(variance_lm, variance_beta)
+
+variance_full$variable <- base::factor(variance_full$variable,
+                                       levels = c("Substrate", "Dominant tree", 
+                                                  "Overlap", "Unexplained"))
+
+# Create faceted multipanel plot with ggpubr and ggplot2
 
 div_labels <- c("\u03B1-Diversity", "\u03B2-Diversity")
 
-ggpubr::ggbarplot(variance_full, x = "q_lev", y = "variance", 
-                  fill = "variable", color = "variable", palette = alpha(c("#999999", "#E69F00", "#56B4E9", "#009E73",
-                                                                           "#F0E442", "#0072B2", "#D55E00", "#CC79A7"),
-                                                                         alpha = 0.9)) +
-  ggplot2::facet_grid(organism ~ div_lev, space="free", scales="free", switch = "y") +
+ggpubr::ggbarplot(variance_full, x = "exploratory", y = "variance", 
+                  fill = "variable", color = "variable", palette = ggplot2::alpha(c("#999999", "#E69F00", "#56B4E9", "#009E73"))) +
+  ggplot2::facet_grid(exploratory ~ div_lev, space="free", scales="free", switch = "y") +
   ggplot2::scale_x_discrete(position = "top") +
   ggplot2::geom_hline(aes(yintercept = 0), linetype = "dashed") +
   ggplot2::coord_flip() + 
@@ -465,7 +560,6 @@ ggpubr::ggbarplot(variance_full, x = "q_lev", y = "variance",
                  axis.title.y = element_blank(),
                  axis.line.y = element_blank(), 
                  axis.ticks.y = element_blank())
-
 
 #################################################################
 ##                          Section 6                          ##
@@ -653,8 +747,7 @@ phyloseq::taxa_names(phy_alb_ord_top25_named_plot) <- phyloseq::tax_table(phy_al
 # Sort the taxa names alphabetically. 
 taxa_names_alb_ord <- base::sort(phyloseq::taxa_names(phy_alb_ord_top25_named_plot))
 
-# To get our desired plotting order and group names we need to change 
-# the exploratory names and order them as factors.
+# XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 sampledata_alb <- base::data.frame(phyloseq::sample_data(phy_alb_ord_top25_named_plot))
 sampledata_alb <- sampledata_alb %>% 
   mutate(across("tree_substrate", stringr::str_replace, "Fagus_sylvatica-bark", "F. sylvatica bark")) %>% 
@@ -857,33 +950,33 @@ phy_abundfilt_A <- phyloseq::filter_taxa(phy_trans_A, function(x) sum(x) > .01, 
 keep_names_A <- taxa_names(phy_abundfilt_A)
 
 my_subset_A <- subset(otu_table(physeq_alb), rownames(otu_table(physeq_alb)) %in% keep_names_A)
-phy_alb_raw_abundfilt_A <- merge_phyloseq(my_subset_A, tax_table(physeq_alb), sample_data(physeq_alb))
+phy_raw_abundfilt_A <- merge_phyloseq(my_subset_A, tax_table(physeq_alb), sample_data(physeq_alb))
 
-saveRDS(phy_alb_raw_abundfilt_A, 'phy_alb_raw_abundfilt.rds')
+#saveRDS(phy_alb_raw_abundfilt_A, 'phy_alb_raw_abundfilt.rds')
 
-# The following part was done on a massive RAM server for faster computation.
-library(SpiecEasi)
-
-# Read in the abundance filtered phyloseq object. 
-phy_raw_abundfilt_A <- readRDS('phy_alb_raw_abundfilt.rds')
-
-# Set up the parameters for the pulsar package 
-pargs <- list(rep.num=50, seed=10010)
-
-# Run the spieceasi algorithm  
-se_raw_abundfilt_A <- SpiecEasi::spiec.easi(phy_raw_abundfilt_A, method='mb', 
-                                 lambda.min.ratio=1e-2, nlambda=70, 
-                                 sel.criterion='bstars',  pulsar.select=TRUE,
-                                 pulsar.params=pargs)
-
-# Obtain the stability parameters.
-SpiecEasi::getStability(se_raw_abundfilt_A)
-
-# Check if we have a none-zero network. 
-sum(SpiecEasi::getRefit(se_raw_abundfilt_A))/2
-
-# Save the network.
-saveRDS(se_raw_abundfilt_A, 'se_raw_abundfilt_A.rds')
+# # The following part was done on a massive RAM server for faster computation.
+# library(SpiecEasi)
+# 
+# # Read in the abundance filtered phyloseq object. 
+# phy_raw_abundfilt_A <- readRDS('phy_alb_raw_abundfilt.rds')
+# 
+# # Set up the parameters for the pulsar package 
+# pargs <- list(rep.num=50, seed=10010)
+# 
+# # Run the spieceasi algorithm  
+# se_raw_abundfilt_A <- SpiecEasi::spiec.easi(phy_raw_abundfilt_A, method='mb', 
+#                                  lambda.min.ratio=1e-2, nlambda=70, 
+#                                  sel.criterion='bstars',  pulsar.select=TRUE,
+#                                  pulsar.params=pargs)
+# 
+# # Obtain the stability parameters.
+# SpiecEasi::getStability(se_raw_abundfilt_A)
+# 
+# # Check if we have a none-zero network. 
+# sum(SpiecEasi::getRefit(se_raw_abundfilt_A))/2
+# 
+# # Save the network.
+# saveRDS(se_raw_abundfilt_A, 'se_raw_abundfilt_A.rds')
 
 # Now we move back to our local computer.
 # Read in the network again.
@@ -935,29 +1028,29 @@ phy_raw_abundfilt_S <- merge_phyloseq(my_subset_S,
                                       tax_table(physeq_sch), 
                                       sample_data(physeq_sch))
 
-saveRDS(phy_raw_abundfilt_S, 'phy_sch_raw_abundfilt.rds')
-
-# The following part was done on a massive RAM server for faster computation.
-# Read in the abundance filtered phyloseq object. 
-phy_raw_abundfilt_S <- readRDS('phy_sch_raw_abundfilt.rds')
-
-# Set up the parameters for the pulsar package 
-pargs <- list(rep.num=50, seed=10010)
-
-# Run the spieceasi algorithm  
-se_raw_abundfilt_S <- SpiecEasi::spiec.easi(phy_raw_abundfilt_S, method='mb', 
-                                            lambda.min.ratio=1e-2, nlambda=100, 
-                                            sel.criterion='bstars',  pulsar.select=TRUE,
-                                            pulsar.params=pargs)
-
-# Obtain the stability parameters.
-SpiecEasi::getStability(se_raw_abundfilt_S)
-
-# Check if we have a none-zero network. 
-sum(SpiecEasi::getRefit(se_raw_abundfilt_S))/2
-
-# Save the network.
-saveRDS(se_raw_abundfilt_S, 'se_raw_abundfilt_S.rds')
+# saveRDS(phy_raw_abundfilt_S, 'phy_sch_raw_abundfilt.rds')
+# 
+# # The following part was done on a massive RAM server for faster computation.
+# # Read in the abundance filtered phyloseq object. 
+# phy_raw_abundfilt_S <- readRDS('phy_sch_raw_abundfilt.rds')
+# 
+# # Set up the parameters for the pulsar package 
+# pargs <- list(rep.num=50, seed=10010)
+# 
+# # Run the spieceasi algorithm  
+# se_raw_abundfilt_S <- SpiecEasi::spiec.easi(phy_raw_abundfilt_S, method='mb', 
+#                                             lambda.min.ratio=1e-2, nlambda=100, 
+#                                             sel.criterion='bstars',  pulsar.select=TRUE,
+#                                             pulsar.params=pargs)
+# 
+# # Obtain the stability parameters.
+# SpiecEasi::getStability(se_raw_abundfilt_S)
+# 
+# # Check if we have a none-zero network. 
+# sum(SpiecEasi::getRefit(se_raw_abundfilt_S))/2
+# 
+# # Save the network.
+# saveRDS(se_raw_abundfilt_S, 'se_raw_abundfilt_S.rds')
 
 # Now we move back to our local computer.
 # Read in the network again.
@@ -992,4 +1085,106 @@ hub_taxa_fun_S <- phyloseq::subset_taxa(physeq_sch,
                                         %in% base::names(fun_top5_between_S))
 phyloseq::tax_table(hub_taxa_fun_S)
 
+##----------------------------------------------------------------
+##                          Section 8.1                          -
+##          Relative abundances of substrates in network         -
+##----------------------------------------------------------------
 
+################Swabian Alb#######################
+# Load in the modules obtained from Gephi. 
+modules_alb <- utils::read.csv(here::here("modules_alb.csv"))
+
+# Append this to the phyloseq object from which the networks were created. 
+# Append it to the taxonomy.
+tax_alb <- base::data.frame(phyloseq::tax_table(phy_raw_abundfilt_A)) %>% 
+  tibble::rownames_to_column(var = "Label") %>% 
+  dplyr::left_join(., modules_alb)
+
+# Necessary steps to get it into the phyloseq object for later plotting.  
+row.names(tax_alb) <- tax_alb$Label
+tax_alb$Label <- NULL
+taxmat_alb <- as.matrix(tax_alb)
+
+# Create a new phyloseq object in order to not overwrite the old one.
+physeq_alb_modules <- phy_raw_abundfilt_A
+
+# Update the taxonomy table.
+tax_table(physeq_alb_modules) <- tax_table(taxmat_alb)
+
+# Update the sample_data to include tree_substrate variable.
+phyloseq::sample_data(physeq_alb_modules) <- phyloseq::sample_data(sampledata_alb)
+
+# Transform the ASV counts to relative abundance. 
+physeq_alb_modules <- phyloseq::transform_sample_counts(physeq_alb_modules,
+                                                        function(x){x / sum(x)})
+
+alb_rel_abund_modules_barplot <- phyloseq::plot_bar(physeq_alb_modules, x = "modularity_class", fill = "modularity_class")+
+  facet_wrap(~ tree_substrate, scales = "free", ncol = 1) +
+  guides(fill = "none") +
+  theme(strip.text.x = element_text(size = 20, face = "italic"),
+        legend.text = element_text(size = 16),
+        legend.title = element_text(size = 20),
+        legend.position = "bottom",legend.direction = "horizontal",
+        axis.title.y = element_text(size = 20),
+        axis.text.x=element_blank(),
+        axis.text.y = element_text(size = 16)) +
+  scale_fill_manual(values = c("#51FEFF","#FE8334","#00D61C","#FF61EA")) +
+  scale_x_discrete(limits = c("1", "3", "0", "2")) +
+  geom_bar(stat="identity") +
+  labs(x = "", y = "proportion of reads in %") +
+  ylim(0, 30) 
+alb_rel_abund_modules_barplot
+
+ggpubr::ggexport(alb_rel_abund_modules_barplot, filename = "alb_modules_plot.tiff",
+                 width = 900, height = 1800, 
+                 res = 300)
+
+################Schorfheide-Chorin#######################
+
+# Load in the modules obtained from Gephi. 
+modules_sch <- utils::read.csv(here::here("modules_sch.csv"))
+
+# Append this to the phyloseq object from which the networks were created. 
+# Append it to the taxonomy.
+tax_sch <- base::data.frame(phyloseq::tax_table(phy_raw_abundfilt_S)) %>% 
+  tibble::rownames_to_column(var = "Label") %>% 
+  dplyr::left_join(., modules_sch)
+
+# Necessary steps to get it into the phyloseq object for later plotting.  
+row.names(tax_sch) <- tax_sch$Label
+tax_sch$Label <- NULL
+taxmat_sch <- as.matrix(tax_sch)
+
+# Create a new phyloseq object in order to not overwrite the old one.
+physeq_sch_modules <- phy_raw_abundfilt_S
+
+# Update the taxonomy table.
+tax_table(physeq_sch_modules) <- tax_table(taxmat_sch)
+
+# Update the sample_data to include tree_substrate variable.
+phyloseq::sample_data(physeq_sch_modules) <- phyloseq::sample_data(sampledata_sch)
+
+# Transform the ASV counts to relative abundance. 
+physeq_sch_modules <- phyloseq::transform_sample_counts(physeq_sch_modules,
+                                                        function(x){x / sum(x)})
+
+sch_rel_abund_modules_barplot <- plot_bar(physeq_sch_modules, x="modularity_class", fill = "modularity_class") +
+  facet_wrap(~ tree_substrate, scales = "free", ncol = 1) +
+  guides(fill = "none") +
+  theme(strip.text.x = element_text(size = 20, face = "italic"),
+        legend.text = element_text(size = 16),
+        legend.title = element_text(size = 20),
+        legend.position = "bottom",legend.direction = "horizontal",
+        axis.title.y = element_text(size = 20),
+        axis.text.x=element_blank(),
+        axis.text.y = element_text(size = 16),
+        legend.key = element_blank()) +
+  scale_fill_manual(values = c("#FE8334", "#FF61EA", "#51FEFF","#00D61C")) +
+  geom_bar(stat="identity") +
+  labs(x = "", y = "proportion of reads in %") +
+  ylim(0, 18)
+sch_rel_abund_modules_barplot
+
+ggpubr::ggexport(sch_rel_abund_modules_barplot, filename = "sch_modules_plot.tiff",
+                 width = 900, height = 1800, 
+                 res = 300)
