@@ -125,6 +125,7 @@ filtered_physeq <- phyloseq::subset_samples(full_physeq,
                                             dominant_tree %in% c("Fagus_sylvatica",
                                                                  "Pinus_sylvestris", 
                                                                  "Picea_abies")) %>% 
+  phyloseq::subset_samples(exploratory %in% c("Alb", "Schorfheide")) %>%
   phyloseq::prune_taxa(phyloseq::taxa_sums(.) > 0,.)
 
 # Split the phyloseq object into the two exploratories.
@@ -1188,3 +1189,180 @@ sch_rel_abund_modules_barplot
 ggpubr::ggexport(sch_rel_abund_modules_barplot, filename = "sch_modules_plot.tiff",
                  width = 900, height = 1800, 
                  res = 300)
+
+#################################################################
+##                          Section 9                          ##
+##                    Miscellaneous Numbers                    ##
+#################################################################
+
+# Total number of ASVs
+asv_num_total <- phyloseq::ntaxa(filtered_physeq)
+asv_num_total
+
+# Number of ASVs per study region. 
+asv_num_alb <- phyloseq::ntaxa(physeq_alb)
+asv_num_alb
+
+asv_num_sch <- phyloseq::ntaxa(physeq_sch)
+asv_num_sch
+
+# Number of ASVs per substrate. 
+asv_num_soil <- phyloseq::ntaxa(physeq_soil)
+asv_num_soil
+
+asv_num_bark <- phyloseq::ntaxa(physeq_bark)
+asv_num_bark
+
+# Number & percentage of ASVs not assignable at all taxonomic rank.
+no_phylum_num <- sum(is.na(data.frame(phyloseq::tax_table(filtered_physeq))$Phylum))
+no_phylum_num
+no_phylum_num/asv_num_total * 100
+
+no_class_num <- sum(is.na(data.frame(phyloseq::tax_table(filtered_physeq))$Class))
+no_class_num
+no_class_num/asv_num_total * 100
+
+no_order_num <- sum(is.na(data.frame(phyloseq::tax_table(filtered_physeq))$Order))
+no_order_num
+no_order_num/asv_num_total * 100
+
+no_family_num <- sum(is.na(data.frame(phyloseq::tax_table(filtered_physeq))$Family))
+no_family_num
+no_family_num/asv_num_total * 100
+
+no_genus_num <- sum(is.na(data.frame(phyloseq::tax_table(filtered_physeq))$Genus))
+no_genus_num
+no_genus_num/asv_num_total * 100
+
+no_species_num <- sum(is.na(data.frame(phyloseq::tax_table(filtered_physeq))$Species))
+no_species_num
+no_species_num/asv_num_total * 100
+
+# Overlap between soil and bark in the regions. 
+# Check the relative number of ASVs for the Swabian Alb.
+alb_substrate_overlap <- MicEco::ps_venn(physeq_alb, group = "substrate", fraction = 0,
+                weight = T, relative = T, plot = T)
+alb_substrate_overlap
+
+# Check the relative number of ASVs for Schorfheide-Chorin.
+sch_substrate_overlap <- MicEco::ps_venn(physeq_sch, group = "substrate", fraction = 0,
+                                         weight = T, relative = T, plot = T)
+sch_substrate_overlap
+
+# Average overlap between soil and bark  
+(alb_substrate_overlap$data$original.values[3] + 
+    sch_substrate_overlap$data$original.values[3]) / 2
+
+# Overlap between tree species in the regions. 
+# Check the relative number of ASVs for the Swabian Alb.
+alb_tree_overlap <- MicEco::ps_venn(physeq_alb, group = "dominant_tree", fraction = 0,
+                                         weight = T, relative = T, plot = T)
+alb_tree_overlap
+
+# Check the relative number of ASVs for Schorfheide-Chorin.
+sch_tree_overlap <- MicEco::ps_venn(physeq_sch, group = "dominant_tree", fraction = 0,
+                                         weight = T, relative = T, plot = T)
+sch_tree_overlap
+
+# Average overlap between soil and bark  
+(alb_tree_overlap$data$original.values[3] + 
+    sch_tree_overlap$data$original.values[3]) / 2
+
+# Average number of reads per region. 
+av_num_reads_alb <- mean(phyloseq::sample_sums(physeq_alb))
+av_num_reads_alb
+
+av_num_reads_sch <- mean(phyloseq::sample_sums(physeq_sch))
+av_num_reads_sch
+
+# Number of ASVs per region-tree species combination. 
+asv_num_alb_fagus <- phyloseq::ntaxa(physeq_alb_fagus)
+asv_num_alb_fagus
+
+asv_num_alb_picea <- phyloseq::ntaxa(physeq_alb_picea)
+asv_num_alb_picea
+
+asv_num_sch_fagus <- phyloseq::ntaxa(physeq_sch_fagus)
+asv_num_sch_fagus
+
+asv_num_sch_pinus <- phyloseq::ntaxa(physeq_sch_pinus)
+asv_num_sch_pinus
+
+# Overlap between tree species in the regions and substrate. 
+# Check the relative number of ASVs for the Swabian Alb.
+alb_fagus_soil_overlap <- MicEco::ps_venn(physeq_alb_fagus, group = "substrate", fraction = 0,
+                                    weight = T, relative = T, plot = T)
+alb_fagus_soil_overlap
+
+# Check the relative number of ASVs for the Swabian Alb.
+alb_picea_soil_overlap <- MicEco::ps_venn(physeq_alb_picea, group = "substrate", fraction = 0,
+                                          weight = T, relative = T, plot = T)
+alb_picea_soil_overlap
+
+# Check the relative number of ASVs for Schorfheide-Chorin.
+sch_tree_overlap <- MicEco::ps_venn(physeq_sch, group = "dominant_tree", fraction = 0,
+                                    weight = T, relative = T, plot = T)
+sch_tree_overlap
+
+# Average overlap between soil and bark  
+(alb_tree_overlap$data$original.values[3] + 
+    sch_tree_overlap$data$original.values[3]) / 2
+
+
+# Number of ASVs entering the networks per region. 
+asv_num_alb_network <- phyloseq::ntaxa(phy_abundfilt_A)
+asv_num_alb_network
+
+asv_num_sch_network <- phyloseq::ntaxa(phy_abundfilt_S)
+asv_num_sch_network
+
+# Percentage of Lecanoromycetes (of total #)  
+asv_num_soil_lecanoromycetes <- phyloseq::ntaxa(
+  phyloseq::subset_taxa(physeq_soil, Class == "Lecanoromycetes"))
+asv_num_soil_lecanoromycetes
+asv_num_soil_lecanoromycetes/asv_num_soil * 100
+
+asv_num_bark_lecanoromycetes <- phyloseq::ntaxa(
+  phyloseq::subset_taxa(physeq_bark, Class == "Lecanoromycetes"))
+asv_num_bark_lecanoromycetes
+asv_num_bark_lecanoromycetes/asv_num_bark * 100
+
+# Percentage of Lecanoromycetes (relative abundance)
+phy_class_bark <-  physeq_bark %>%
+  microbiome::aggregate_taxa(level = "Class")  
+
+# Calculate the total number of reads
+total_reads_bark <- sum(rowSums(otu_table(phy_class_bark)))
+total_reads_bark
+
+# Calculate the total number of reads for the lecanoromycetes  
+total_reads_lecanoromycetes_bark <- rowSums(otu_table(phyloseq::subset_taxa(phy_class_bark, Class == "Lecanoromycetes")))
+total_reads_lecanoromycetes_bark
+
+# Divide the two total to get the relative abundance
+rel_abund_lecanoromycetes_bark <- total_reads_lecanoromycetes_bark / total_reads_bark * 100
+rel_abund_lecanoromycetes_bark
+
+phy_class_soil <-  physeq_soil %>%
+  microbiome::aggregate_taxa(level = "Class")  
+
+# Calculate the total number of reads
+total_reads_soil <- sum(rowSums(otu_table(phy_class_soil)))
+total_reads_soil
+
+# Calculate the total number of reads for the lecanoromycetes  
+total_reads_lecanoromycetes_soil <- rowSums(otu_table(phyloseq::subset_taxa(phy_class_soil, Class == "Lecanoromycetes")))
+total_reads_lecanoromycetes_soil
+
+# Divide the two total to get the relative abundance
+rel_abund_lecanoromycetes_soil <- total_reads_lecanoromycetes_soil / total_reads_soil * 100
+rel_abund_lecanoromycetes_soil
+
+# Overlap between trees in the full substrate dataset. 
+soil_tree_overlap <- MicEco::ps_venn(physeq_soil, group = "dominant_tree", fraction = 0,
+                                    weight = T, relative = T, plot = T)
+soil_tree_overlap
+
+bark_tree_overlap <- MicEco::ps_venn(physeq_bark, group = "dominant_tree", fraction = 0,
+                                     weight = T, relative = T, plot = T)
+bark_tree_overlap
