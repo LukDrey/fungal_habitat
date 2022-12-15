@@ -540,27 +540,26 @@ variance_beta <- rbind(alb_variance_nmds, sch_variance_nmds) %>%
 
 variance_full <- rbind(variance_lm, variance_beta)
 
-variance_full$variable <- base::factor(variance_full$variable,
-                                       levels = c("Substrate", "Dominant tree", 
-                                                  "Overlap", "Unexplained"))
-
-# Create faceted multipanel plot with ggpubr and ggplot2
+# Create faceted multipanel plot with ggpubr and ggplot2. 
 
 div_labels <- c("\u03B1-Diversity", "\u03B2-Diversity")
 
 ggpubr::ggbarplot(variance_full, x = "exploratory", y = "variance", 
-                  fill = "variable", color = "variable", palette = ggplot2::alpha(c("#999999", "#E69F00", "#56B4E9", "#009E73"))) +
-  ggplot2::facet_grid(exploratory ~ div_lev, space="free", scales="free", switch = "y") +
+                  fill = "variable", color = "variable",
+                  palette = ggplot2::alpha(c("#009E73",  "#E69F00",  
+                                             "#56B4E9", "#999999"))) +
+  ggplot2::facet_grid(exploratory ~ div_lev,
+                      space="free", scales="free", switch = "y") +
   ggplot2::scale_x_discrete(position = "top") +
   ggplot2::geom_hline(aes(yintercept = 0), linetype = "dashed") +
   ggplot2::coord_flip() + 
   ggplot2::ylab("Explained Variance") + 
   ggplot2::theme(text = element_text(size = 15),
                  legend.title = element_blank(),
-                 legend.position = "right",
+                 legend.position = c(1.1,0.5),
                  axis.title.y = element_blank(),
                  axis.line.y = element_blank(), 
-                 axis.ticks.y = element_blank())
+                 axis.ticks.y = element_blank()) 
 
 #################################################################
 ##                          Section 6                          ##
@@ -1269,11 +1268,11 @@ sch_tree_overlap
     sch_tree_overlap$data$original.values[3]) / 2
 
 # Average number of reads per region. 
-av_num_reads_alb <- mean(phyloseq::sample_sums(physeq_alb))
-av_num_reads_alb
+asv_num_reads_alb <- mean(phyloseq::sample_sums(physeq_alb))
+asv_num_reads_alb
 
-av_num_reads_sch <- mean(phyloseq::sample_sums(physeq_sch))
-av_num_reads_sch
+asv_num_reads_sch <- mean(phyloseq::sample_sums(physeq_sch))
+asv_num_reads_sch
 
 # Number of ASVs per region-tree species combination. 
 asv_num_alb_fagus <- phyloseq::ntaxa(physeq_alb_fagus)
@@ -1366,3 +1365,114 @@ soil_tree_overlap
 bark_tree_overlap <- MicEco::ps_venn(physeq_bark, group = "dominant_tree", fraction = 0,
                                      weight = T, relative = T, plot = T)
 bark_tree_overlap
+
+#################################################################
+##                          Section 10                         ##
+##                    Plotting alpha diversity                 ##
+#################################################################
+
+################Substrate differences#######################
+
+      ################ASV Counts#######################
+
+# Create a joint table of ASV numbers for the substrates and differences. 
+
+alb_substrate_list <- MicEco::ps_venn(physeq_alb, group = "substrate",
+                fraction = 0, weight = F, relative = F, plot = F)
+
+asv_num_alb_soil <- phyloseq::ntaxa(physeq_alb_soil)
+asv_num_alb_bark <- phyloseq::ntaxa(physeq_alb_bark)
+
+alb_substrate_df <- base::data.frame(exploratory = "Swabian Alb",
+                                     value = c(length(alb_substrate_list$soil), 
+                                               length(alb_substrate_list$bark),
+                                               length(alb_substrate_list$bark__soil),
+                                               asv_num_alb_soil,
+                                               asv_num_alb_bark),
+                                     variable = c("soil only",
+                                                  "bark only",
+                                                  "shared",
+                                                  "soil total",
+                                                  "bark total"),
+                                     stack = c(rep("yes", 3),
+                                               rep("no1", 1),
+                                               rep("no2", 1)))
+
+sch_substrate_list <- MicEco::ps_venn(physeq_sch, group = "substrate",
+                                      fraction = 0, weight = F, relative = F, plot = F)
+
+asv_num_sch_soil <- phyloseq::ntaxa(physeq_sch_soil)
+asv_num_sch_bark <- phyloseq::ntaxa(physeq_sch_bark)
+
+sch_substrate_df <- base::data.frame(exploratory = "Schorfheide-Chorin",
+                                     value = c(length(sch_substrate_list$soil), 
+                                                  length(sch_substrate_list$bark),
+                                                  length(sch_substrate_list$bark__soil),
+                                                  asv_num_sch_soil,
+                                                  asv_num_sch_bark),
+                                     variable = c("soil only",
+                                                  "bark only",
+                                                  "shared",
+                                                  "soil total",
+                                                  "bark total"),
+                                     stack = c(rep("yes", 3),
+                                               rep("no1", 1),
+                                               rep("no2", 1)))
+
+# Combine the regional dataframes. 
+full_substrate_df <- rbind(sch_substrate_df, alb_substrate_df)
+
+full_substrate_df$exploratory <- base::factor(full_substrate_df$exploratory, 
+                                              levels = c("Swabian Alb",
+                                                         "Schorfheide-Chorin"))
+
+full_substrate_df$variable <- base::factor(full_substrate_df$variable,
+                                           levels = c("shared",
+                                                      "bark only",
+                                                      "soil only",
+                                                      "soil total",
+                                                      "bark total"))
+# Create barplot.
+ggpubr::ggbarplot(full_substrate_df, x = "stack", y = "value", 
+                  fill = "variable", color = "variable", width = 0.9,
+                  palette = c("#009E73",  "#E69F00", "#56B4E9",
+                              ggplot2::alpha("#56B4E9", 0.7),
+                              ggplot2::alpha("#E69F00", 0.7))) +
+  ggplot2::facet_grid("exploratory",
+                      space="free", scales="free", switch = "y") +
+  ggplot2::scale_x_discrete(position = "top", limits = c("no2", "no1", "yes")) +
+  ggplot2::coord_flip() + 
+  ggplot2::ylab("Number of ASVs") + 
+  ggplot2::theme(text = element_text(size = 15),
+                 legend.title = element_blank(),
+                 axis.title.y = element_blank(),
+                 axis.line.y = element_blank(), 
+                 axis.ticks.y = element_blank(), 
+                 axis.text.y = element_blank(), 
+                 legend.position = "bottom") 
+
+
+      ################Relative abundance#######################
+
+alb_bark_only_otu <- subset(otu_table(physeq_alb_bark), 
+                    rownames(otu_table(physeq_alb_bark))
+                    %in% alb_substrate_list$bark)
+
+alb_soil_only_otu <- subset(otu_table(physeq_alb_soil), 
+                            rownames(otu_table(physeq_alb_soil))
+                            %in% alb_substrate_list$soil)
+
+alb_shared_otu <- subset(otu_table(physeq_alb_soil), 
+                            rownames(otu_table(physeq_alb_soil))
+                         %in% alb_substrate_list$bark__soil)
+
+alb_full_otus <- sum(colSums(alb_bark_only_otu)) +
+  sum(colSums(alb_soil_only_otu)) +
+  sum(colSums(alb_shared_otu))
+
+rel_abund_bark_only_alb <- round(sum(colSums(alb_bark_only_otu)) / alb_full_otus * 100, 0)
+rel_abund_soil_only_alb <- round(sum(colSums(alb_soil_only_otu)) / alb_full_otus * 100, 0)
+rel_abund_shared_alb <- round(sum(colSums(alb_shared_otu)) / alb_full_otus * 100, 0)
+
+rel_abund_bark_total_alb <- sum(sample_sums(otu_table(physeq_alb_bark))) / sum(sample_sums(otu_table(physeq_alb))) * 100
+rel_abund_soil_total_alb <- sum(sample_sums(otu_table(physeq_alb_soil))) / sum(sample_sums(otu_table(physeq_alb))) * 100
