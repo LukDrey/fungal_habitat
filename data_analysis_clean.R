@@ -226,9 +226,16 @@ phyloseq::sample_data(physeq_sch_curve) <- phyloseq::sample_data(physeq_sch) %>%
   dplyr::mutate(tree_substrate = base::paste(dominant_tree, substrate, sep = "-"))
 
 # Create rarefaction curve and color the lines by substrate (bark/soil) and host tree species. 
-rare_sch <- ranacapa::ggrare(physeq_sch_curve, step = 50, color = "tree_substrate", se = FALSE)
+rare_sch <- ranacapa::ggrare(physeq_sch_curve, step = 50,
+                             color = "tree_substrate", se = FALSE) 
 
+combined_rare_curves <- ggpubr::ggarrange(rare_alb, rare_sch,
+                                          ncol = 2, nrow = 1)
+combined_rare_curves
 
+ggsave('combined_rare_curves.tiff', device = 'tiff',
+       combined_rare_curves, width = 400, height = 240,
+       units = 'mm', dpi = 300)  
 #################################################################
 ##                          Section 4                          ##
 ##                   Alpha diversity analyses                  ##
@@ -307,7 +314,7 @@ pinus_sch = div_data_sch[div_data_sch$dominant_tree == "Pinus_sylvestris",]
 stats::wilcox.test(fagus_sch$Shannon, pinus_sch$Shannon)
 
 #################################################################
-##                          Section 4                          ##
+##                          Section 5                          ##
 ##                    Beta diversity analyses                  ##
 #################################################################
 
@@ -369,13 +376,18 @@ ordination_legend <- ggpubr::get_legend(ordination_full)
 ordination_final <- ggpubr::ggarrange(ordination_alb, ordination_sch,
                                       ncol = 1, nrow = 2,
                                       legend = "right", legend.grob = ordination_legend)
+ordination_final
+
+ggsave('ordination_final.tiff', device = 'tiff',
+       ordination_final, width = 400, height = 240,
+       units = 'mm', dpi = 300)
 
 #################################################################
-##                          Section 5                          ##
+##                          Section 6                          ##
 ##                    Variance partitioning                    ##
 #################################################################
 ##---------------------------------------------------------------
-##                          Section 5.1                         -
+##                          Section 6.1                         -
 ##                        Alpha Diversity                       -
 ##---------------------------------------------------------------
 
@@ -452,7 +464,7 @@ sch_variance_lm <- modEvA::varPart(A = summary(lm_substrate_sch)$r.squared,
 sch_variance_lm
 
 ##---------------------------------------------------------------
-##                          Section 5.2                         -
+##                          Section 6.2                         -
 ##                         Beta Diversity                       -
 ##---------------------------------------------------------------
 # Function to extract an otu_table from a phyloseq object in the right format for vegan::varpart.
@@ -506,7 +518,7 @@ indfract_adj_r_sch <- varp_sch$part$indfract %>%
 indfract_adj_r_sch
 
 ##---------------------------------------------------------------
-##                          Section 5.3                         -
+##                          Section 6.3                         -
 ##                            Plotting                          -
 ##---------------------------------------------------------------
 
@@ -544,7 +556,7 @@ variance_full <- rbind(variance_lm, variance_beta)
 
 div_labels <- c("\u03B1-Diversity", "\u03B2-Diversity")
 
-ggpubr::ggbarplot(variance_full, x = "exploratory", y = "variance", 
+variance_barplot <- ggpubr::ggbarplot(variance_full, x = "exploratory", y = "variance", 
                   fill = "variable", color = "variable",
                   palette = ggplot2::alpha(c("#009E73",  "#E69F00",  
                                              "#56B4E9", "#999999"))) +
@@ -560,9 +572,13 @@ ggpubr::ggbarplot(variance_full, x = "exploratory", y = "variance",
                  axis.title.y = element_blank(),
                  axis.line.y = element_blank(), 
                  axis.ticks.y = element_blank()) 
+variance_barplot
 
+ggsave('variance_barplot.tiff', device = 'tiff',
+       variance_barplot, width = 400, height = 240,
+       units = 'mm', dpi = 300)
 #################################################################
-##                          Section 6                          ##
+##                          Section 7                          ##
 ##                        Venn diagrams                        ##
 #################################################################
 
@@ -712,8 +728,22 @@ venn_pinus_sch <- MicEco::ps_venn(physeq_sch_pinus, group = "substrate",
                                                     labels = c("\n22% (261)","\n29% (1473)","\n49% (99)"), cex=1.6))
 venn_pinus_sch
 
+# Create the final figure.
+
+final_venn_diagrams <- ggpubr::ggarrange(venn_bark_alb, venn_soil_alb,
+                                         venn_bark_sch, venn_soil_sch,
+                                         venn_fagus_alb, venn_picea_alb,
+                                         venn_fagus_sch, venn_pinus_sch,
+                                         ncol = 2, nrow = 4, 
+                                         labels = "AUTO")
+final_venn_diagrams
+
+ggsave('final_venn_diagrams.tiff', device = 'tiff',
+       final_venn_diagrams, width = 400, height = 600,
+       units = 'mm', dpi = 300)
+
 #################################################################
-##                          Section 7                          ##
+##                          Section 8                          ##
 ##              Community Composition Barplots                 ##
 #################################################################
 
@@ -764,7 +794,7 @@ phyloseq::sample_data(phy_alb_ord_top25_named_plot) <- phyloseq::sample_data(sam
 alb_ord_soil_plots <- phyloseq::subset_samples(phy_alb_ord_top25_named_plot, substrate == "soil") %>%
   microbiome::plot_composition(group_by =  'tree_substrate', otu.sort = taxa_names_alb_ord) +
   scale_fill_manual(values = ggplot2::alpha(my_cols, 0.9), name = 'Order') +
-  guides(fill = guide_legend(title.position = 'top', ncol = 10)) +
+  guides(fill = guide_legend(title.position = 'top', nrow = 3)) +
   theme(panel.grid.major.x = element_blank(), 
         panel.grid.major.y = element_blank(),
         panel.grid.minor = element_blank(),
@@ -782,9 +812,10 @@ alb_ord_soil_plots <- phyloseq::subset_samples(phy_alb_ord_top25_named_plot, sub
         axis.ticks.length.x = unit(-0.2, "cm"), 
         legend.box.spacing = unit(-4, 'mm'),
         legend.background = element_rect(fill = 'transparent'),
-        text = element_text(colour = 'black')) + 
+        text = element_text(colour = 'black', size = 20)) + 
   xlab('Sample') +
-  ylab('Relative Abundance')  
+  ylab('Relative Abundance') + 
+  labs(subtitle = "(B)")  
 alb_ord_soil_plots
 
 # Custom plotting to make a nice stacked barplot. 
@@ -810,10 +841,10 @@ alb_ord_bark_plots <- phyloseq::subset_samples(phy_alb_ord_top25_named_plot, sub
         axis.ticks.length.x = unit(-0.2, "cm"), 
         legend.box.spacing = unit(-4, 'mm'),
         legend.background = element_rect(fill = 'transparent'),
-        text = element_text(colour = 'black')) + 
+        text = element_text(colour = 'black', size = 20)) + 
   xlab('Sample') +
-  ylab('Relative Abundance')   + 
-  labs( subtitle = 'Swabian Alb')
+  ylab('Relative Abundance') + 
+  labs(title = 'Swabian Alb', subtitle = "(A)")
 alb_ord_bark_plots
 
 ############## Schorfheide-Chorin ###############
@@ -881,9 +912,10 @@ sch_ord_soil_plots <- phyloseq::subset_samples(phy_sch_ord_top25_named_plot, sub
         axis.ticks.length.x = unit(-0.2, "cm"), 
         legend.box.spacing = unit(-4, 'mm'),
         legend.background = element_rect(fill = 'transparent'),
-        text = element_text(colour = 'black')) + 
+        text = element_text(colour = 'black', size = 20)) + 
   xlab('Sample') +
-  ylab('Relative Abundance')   
+  ylab('Relative Abundance') + 
+  labs(subtitle = "(B)")   
 sch_ord_soil_plots
 
 sch_ord_bark_plots <- phyloseq::subset_samples(phy_sch_ord_top25_named_plot, substrate == "bark") %>% 
@@ -908,10 +940,10 @@ sch_ord_bark_plots <- phyloseq::subset_samples(phy_sch_ord_top25_named_plot, sub
         axis.ticks.length.x = unit(-0.2, "cm"), 
         legend.box.spacing = unit(-4, 'mm'),
         legend.background = element_rect(fill = 'transparent'),
-        text = element_text(colour = 'black')) + 
+        text = element_text(colour = 'black', size = 20)) + 
   xlab('Sample') +
-  ylab('Relative Abundance')   + 
-  labs( subtitle = 'Schorfheide-Chorin') 
+  ylab('Relative Abundance') + 
+  labs(title = 'Schorfheide-Chorin', subtitle = "(A)") 
 sch_ord_bark_plots
 
 
@@ -922,11 +954,18 @@ final_alb_community_barplot <- ggpubr::ggarrange(alb_ord_bark_plots, alb_ord_soi
                                                  legend = "bottom", common.legend = TRUE)
 final_alb_community_barplot
 
+ggsave('final_alb_community_barplot.tiff', device = 'tiff',
+       final_alb_community_barplot, width = 400, height = 300,
+       units = 'mm', dpi = 300)
 
 final_sch_community_barplot <- ggpubr::ggarrange(sch_ord_bark_plots, sch_ord_soil_plots,
                                                  ncol = 1, nrow = 2,
                                                  legend = "bottom", common.legend = TRUE)
 final_sch_community_barplot
+
+ggsave('final_sch_community_barplot.tiff', device = 'tiff',
+       final_sch_community_barplot, width = 400, height = 300,
+       units = 'mm', dpi = 300)
 
 
 combined_community_barplot <- ggpubr::ggarrange(final_alb_community_barplot,
@@ -934,9 +973,12 @@ combined_community_barplot <- ggpubr::ggarrange(final_alb_community_barplot,
                                                 ncol = 1, nrow = 2)
 combined_community_barplot
 
+ggsave('combined_community_barplots.tiff', device = 'tiff',
+       combined_community_barplot, width = 300, height = 600,
+       units = 'mm', dpi = 300)
 
 #################################################################
-##                          Section 8                          ##
+##                          Section 9                          ##
 ##                     Co-Occurence Networks                   ##
 #################################################################
 
@@ -1086,7 +1128,7 @@ hub_taxa_fun_S <- phyloseq::subset_taxa(physeq_sch,
 phyloseq::tax_table(hub_taxa_fun_S)
 
 ##----------------------------------------------------------------
-##                          Section 8.1                          -
+##                          Section 9.1                          -
 ##          Relative abundances of substrates in network         -
 ##----------------------------------------------------------------
 
@@ -1190,7 +1232,7 @@ ggpubr::ggexport(sch_rel_abund_modules_barplot, filename = "sch_modules_plot.tif
                  res = 300)
 
 #################################################################
-##                          Section 9                          ##
+##                          Section 10                         ##
 ##                    Miscellaneous Numbers                    ##
 #################################################################
 
@@ -1367,7 +1409,7 @@ bark_tree_overlap <- MicEco::ps_venn(physeq_bark, group = "dominant_tree", fract
 bark_tree_overlap
 
 #################################################################
-##                          Section 10                         ##
+##                          Section 11                         ##
 ##                    Plotting alpha diversity                 ##
 #################################################################
 
@@ -1430,19 +1472,20 @@ full_substrate_df$variable <- base::factor(full_substrate_df$variable,
                                            levels = c("shared",
                                                       "bark only",
                                                       "soil only",
-                                                      "soil total",
-                                                      "bark total"))
+                                                      "bark total",
+                                                      "soil total"))
 # Create barplot.
-ggpubr::ggbarplot(full_substrate_df, x = "stack", y = "value", 
+asv_num_substrate_barplot <- ggpubr::ggbarplot(full_substrate_df, x = "stack", y = "value", 
                   fill = "variable", color = "variable", width = 0.9,
                   palette = c("#009E73",  "#E69F00", "#56B4E9",
-                              ggplot2::alpha("#56B4E9", 0.7),
-                              ggplot2::alpha("#E69F00", 0.7))) +
+                              ggplot2::alpha("#E69F00", 0.7),
+                              ggplot2::alpha("#56B4E9", 0.7))) +
   ggplot2::facet_grid("exploratory",
                       space="free", scales="free", switch = "y") +
   ggplot2::scale_x_discrete(position = "top", limits = c("no2", "no1", "yes")) +
   ggplot2::coord_flip() + 
   ggplot2::ylab("Number of ASVs") + 
+  ggplot2::labs(subtitle = "(A)") + 
   ggplot2::theme(text = element_text(size = 15),
                  legend.title = element_blank(),
                  axis.title.y = element_blank(),
@@ -1450,29 +1493,509 @@ ggpubr::ggbarplot(full_substrate_df, x = "stack", y = "value",
                  axis.ticks.y = element_blank(), 
                  axis.text.y = element_blank(), 
                  legend.position = "bottom") 
-
+asv_num_substrate_barplot
 
       ################Relative abundance#######################
 
-alb_bark_only_otu <- subset(otu_table(physeq_alb_bark), 
-                    rownames(otu_table(physeq_alb_bark))
-                    %in% alb_substrate_list$bark)
+alb_bark_only_otu <- subset(otu_table(physeq_alb), 
+                    rownames(otu_table(physeq_alb)) %in% alb_substrate_list$bark)
 
-alb_soil_only_otu <- subset(otu_table(physeq_alb_soil), 
-                            rownames(otu_table(physeq_alb_soil))
-                            %in% alb_substrate_list$soil)
+alb_soil_only_otu <- base::subset(otu_table(physeq_alb), 
+                            rownames(otu_table(physeq_alb)) %in% alb_substrate_list$soil)
 
-alb_shared_otu <- subset(otu_table(physeq_alb_soil), 
-                            rownames(otu_table(physeq_alb_soil))
-                         %in% alb_substrate_list$bark__soil)
+alb_shared_otu <- subset(otu_table(physeq_alb), 
+                            rownames(otu_table(physeq_alb)) %in% alb_substrate_list$bark__soil)
 
-alb_full_otus <- sum(colSums(alb_bark_only_otu)) +
-  sum(colSums(alb_soil_only_otu)) +
-  sum(colSums(alb_shared_otu))
 
-rel_abund_bark_only_alb <- round(sum(colSums(alb_bark_only_otu)) / alb_full_otus * 100, 0)
-rel_abund_soil_only_alb <- round(sum(colSums(alb_soil_only_otu)) / alb_full_otus * 100, 0)
-rel_abund_shared_alb <- round(sum(colSums(alb_shared_otu)) / alb_full_otus * 100, 0)
 
-rel_abund_bark_total_alb <- sum(sample_sums(otu_table(physeq_alb_bark))) / sum(sample_sums(otu_table(physeq_alb))) * 100
-rel_abund_soil_total_alb <- sum(sample_sums(otu_table(physeq_alb_soil))) / sum(sample_sums(otu_table(physeq_alb))) * 100
+rel_abund_bark_only_alb <- round(sum(colSums(alb_bark_only_otu)) /
+                                   sum(taxa_sums(physeq_alb)) * 100, 2)
+rel_abund_bark_only_alb
+
+rel_abund_soil_only_alb <- round(sum(colSums(alb_soil_only_otu)) /
+                                   sum(taxa_sums(physeq_alb)) * 100, 2)
+rel_abund_soil_only_alb
+
+rel_abund_shared_alb <- round(sum(colSums(alb_shared_otu)) /
+                                sum(taxa_sums(physeq_alb)) * 100, 2)
+rel_abund_shared_alb
+
+rel_abund_bark_total_alb <- round(sum(taxa_sums(physeq_alb_bark)) / sum(taxa_sums(physeq_alb)) * 100, 2)
+rel_abund_bark_total_alb
+
+rel_abund_soil_total_alb <- round(sum(taxa_sums(physeq_alb_soil)) / sum(taxa_sums(physeq_alb)) * 100, 2)
+rel_abund_soil_total_alb
+
+rel_abund_alb_substrate_df <- base::data.frame(exploratory = "Swabian Alb",
+                                     value = c(rel_abund_soil_only_alb, 
+                                               rel_abund_bark_only_alb,
+                                               rel_abund_shared_alb,
+                                               rel_abund_soil_total_alb,
+                                               rel_abund_bark_total_alb),
+                                     variable = c("soil only",
+                                                  "bark only",
+                                                  "shared",
+                                                  "soil total",
+                                                  "bark total"),
+                                     stack = c(rep("yes", 3),
+                                               rep("no", 2)))
+
+sch_bark_only_otu <- subset(otu_table(physeq_sch), 
+                            rownames(otu_table(physeq_sch)) %in% sch_substrate_list$bark)
+
+sch_soil_only_otu <- base::subset(otu_table(physeq_sch), 
+                                  rownames(otu_table(physeq_sch)) %in% sch_substrate_list$soil)
+
+sch_shared_otu <- subset(otu_table(physeq_sch), 
+                         rownames(otu_table(physeq_sch)) %in% sch_substrate_list$bark__soil)
+
+
+
+rel_abund_bark_only_sch <- round(sum(colSums(sch_bark_only_otu)) /
+                                   sum(taxa_sums(physeq_sch)) * 100, 2)
+rel_abund_bark_only_sch
+
+rel_abund_soil_only_sch <- round(sum(colSums(sch_soil_only_otu)) /
+                                   sum(taxa_sums(physeq_sch)) * 100, 2)
+rel_abund_soil_only_sch
+
+rel_abund_shared_sch <- round(sum(colSums(sch_shared_otu)) /
+                                sum(taxa_sums(physeq_sch)) * 100, 2)
+rel_abund_shared_sch
+
+rel_abund_bark_total_sch <- round(sum(taxa_sums(physeq_sch_bark)) / sum(taxa_sums(physeq_sch)) * 100, 2)
+rel_abund_bark_total_sch
+
+rel_abund_soil_total_sch <- round(sum(taxa_sums(physeq_sch_soil)) / sum(taxa_sums(physeq_sch)) * 100, 2)
+rel_abund_soil_total_sch
+
+rel_abund_sch_substrate_df <- base::data.frame(exploratory = "Schorfheide-Chorin",
+                                               value = c(rel_abund_soil_only_sch, 
+                                                         rel_abund_bark_only_sch,
+                                                         rel_abund_shared_sch,
+                                                         rel_abund_soil_total_sch,
+                                                         rel_abund_bark_total_sch),
+                                               variable = c("soil only",
+                                                            "bark only",
+                                                            "shared",
+                                                            "soil total",
+                                                            "bark total"),
+                                               stack = c(rep("yes", 3),
+                                                         rep("no", 2)))
+
+# Combine the regional dataframes. 
+rel_abund_full_substrate_df <- rbind(rel_abund_sch_substrate_df,
+                                     rel_abund_alb_substrate_df)
+
+rel_abund_full_substrate_df$exploratory <- base::factor(rel_abund_full_substrate_df$exploratory, 
+                                              levels = c("Swabian Alb",
+                                                         "Schorfheide-Chorin"))
+
+rel_abund_full_substrate_df$variable <- base::factor(rel_abund_full_substrate_df$variable,
+                                           levels = c("shared",
+                                                      "bark only",
+                                                      "soil only",
+                                                      "bark total",
+                                                      "soil total"))
+# Create barplot.
+rel_abund_substrate_barplot <- ggpubr::ggbarplot(rel_abund_full_substrate_df, x = "stack", y = "value", 
+                  fill = "variable", color = "variable", width = 0.9,
+                  palette = c("#009E73",
+                              "#E69F00",
+                              "#56B4E9",
+                              ggplot2::alpha("#E69F00", 0.7),
+                              ggplot2::alpha("#56B4E9", 0.7))) +
+  ggplot2::facet_grid("exploratory",
+                      space="free", scales="free", switch = "y") +
+  ggplot2::scale_x_discrete(position = "top", limits = c("no", "yes")) +
+  ggplot2::coord_flip() + 
+  ggplot2::ylab("Relative abundance (%)") + 
+  ggplot2::labs(subtitle = "(B)") + 
+  ggplot2::theme(text = element_text(size = 15),
+                 legend.title = element_blank(),
+                 axis.title.y = element_blank(),
+                 axis.line.y = element_blank(), 
+                 axis.ticks.y = element_blank(), 
+                 axis.text.y = element_blank(), 
+                 legend.position = "bottom") 
+rel_abund_substrate_barplot
+
+################Tree differences#######################
+
+################ASV Counts#######################
+
+# Create a joint table of ASV numbers for the substrates and differences. 
+
+alb_tree_list_bark <- MicEco::ps_venn(physeq_alb_bark, group = "dominant_tree",
+                                      fraction = 0, weight = F, relative = F, plot = F)
+
+asv_num_alb_fagus_bark <- phyloseq::ntaxa(physeq_alb_bark_fagus)
+asv_num_alb_picea_bark <- phyloseq::ntaxa(physeq_alb_bark_picea)
+
+alb_tree_df_bark <- base::data.frame(exploratory = "Swabian Alb \n bark",
+                                     value = c(length(alb_tree_list_bark$Fagus_sylvatica), 
+                                               length(alb_tree_list_bark$Picea_abies),
+                                               length(alb_tree_list_bark$Fagus_sylvatica__Picea_abies),
+                                               asv_num_alb_fagus_bark,
+                                               asv_num_alb_picea_bark),
+                                     variable = c("Fagus only",
+                                                  "Picea only",
+                                                  "shared",
+                                                  "Fagus total",
+                                                  "Picea total"),
+                                     stack = c(rep("yes", 3),
+                                               rep("no1", 1),
+                                               rep("no2", 1)))
+
+
+alb_tree_list_soil <- MicEco::ps_venn(physeq_alb_soil, group = "dominant_tree",
+                                      fraction = 0, weight = F, relative = F, plot = F)
+
+asv_num_alb_fagus_soil <- phyloseq::ntaxa(physeq_alb_soil_fagus)
+asv_num_alb_picea_soil <- phyloseq::ntaxa(physeq_alb_soil_picea)
+
+alb_tree_df_soil <- base::data.frame(exploratory = "Swabian Alb \n soil",
+                                     value = c(length(alb_tree_list_soil$Fagus_sylvatica), 
+                                               length(alb_tree_list_soil$Picea_abies),
+                                               length(alb_tree_list_soil$Fagus_sylvatica__Picea_abies),
+                                               asv_num_alb_fagus_soil,
+                                               asv_num_alb_picea_soil),
+                                     variable = c("Fagus only",
+                                                  "Picea only",
+                                                  "shared",
+                                                  "Fagus total",
+                                                  "Picea total"),
+                                     stack = c(rep("yes", 3),
+                                               rep("no1", 1),
+                                               rep("no2", 1)))
+
+sch_tree_list_bark <- MicEco::ps_venn(physeq_sch_bark, group = "dominant_tree",
+                                      fraction = 0, weight = F, relative = F, plot = F)
+
+asv_num_sch_fagus_bark <- phyloseq::ntaxa(physeq_sch_bark_fagus)
+asv_num_sch_pinus_bark <- phyloseq::ntaxa(physeq_sch_bark_pinus)
+
+sch_tree_df_bark <- base::data.frame(exploratory = "Schorfheide- Chorin \n bark",
+                                     value = c(length(sch_tree_list_bark$Fagus_sylvatica), 
+                                               length(sch_tree_list_bark$Pinus_sylvestris),
+                                               length(sch_tree_list_bark$Fagus_sylvatica__Picea_abies),
+                                               asv_num_sch_fagus_bark,
+                                               asv_num_sch_pinus_bark),
+                                     variable = c("Fagus only",
+                                                  "Pinus only",
+                                                  "shared",
+                                                  "Fagus total",
+                                                  "Pinus total"),
+                                     stack = c(rep("yes", 3),
+                                               rep("no1", 1),
+                                               rep("no2", 1)))
+
+
+sch_tree_list_soil <- MicEco::ps_venn(physeq_sch_soil, group = "dominant_tree",
+                                      fraction = 0, weight = F, relative = F, plot = F)
+
+asv_num_sch_fagus_soil <- phyloseq::ntaxa(physeq_sch_soil_fagus)
+asv_num_sch_pinus_soil <- phyloseq::ntaxa(physeq_sch_soil_pinus)
+
+sch_tree_df_soil <- base::data.frame(exploratory = "Schorfheide- Chorin \n soil",
+                                     value = c(length(sch_tree_list_soil$Fagus_sylvatica), 
+                                               length(sch_tree_list_soil$Pinus_sylvestris),
+                                               length(sch_tree_list_soil$Fagus_sylvatica__Picea_abies),
+                                               asv_num_sch_fagus_soil,
+                                               asv_num_sch_pinus_soil),
+                                     variable = c("Fagus only",
+                                                  "Pinus only",
+                                                  "shared",
+                                                  "Fagus total",
+                                                  "Pinus total"),
+                                     stack = c(rep("yes", 3),
+                                               rep("no1", 1),
+                                               rep("no2", 1)))
+
+# Combine the regional dataframes. 
+full_tree_df <- rbind(sch_tree_df_soil, sch_tree_df_bark, 
+                      alb_tree_df_soil, alb_tree_df_bark)
+
+full_tree_df$exploratory <- base::factor(full_tree_df$exploratory, 
+                                              levels = c("Swabian Alb \n bark",
+                                                         "Swabian Alb \n soil",
+                                                         "Schorfheide- Chorin \n bark",
+                                                         "Schorfheide- Chorin \n soil"))
+
+full_tree_df$variable <- base::factor(full_tree_df$variable,
+                                           levels = c("shared",
+                                                      "Fagus only",
+                                                      "Picea only",
+                                                      "Fagus total",
+                                                      "Picea total",
+                                                      "Pinus only",
+                                                      "Pinus total"))
+# Create barplot.
+asv_num_tree_barplot <- ggpubr::ggbarplot(full_tree_df, x = "stack", y = "value", 
+                  fill = "variable", color = "variable", width = 0.9,
+                  palette = c("#009E73",
+                              "#E69F00",
+                              "#56B4E9",
+                              ggplot2::alpha("#E69F00", 0.7),
+                              ggplot2::alpha("#56B4E9", 0.7),
+                              "#26547C",
+                              ggplot2::alpha("#26547C", 0.7))) +
+  ggplot2::facet_grid("exploratory",
+                      space="free", scales="free", switch = "y",
+                      labeller = label_wrap_gen(width = 15)) +
+  ggplot2::scale_x_discrete(position = "top", limits = c("no2", "no1", "yes")) +
+  ggplot2::coord_flip() + 
+  ggplot2::ylab("Number of ASVs") + 
+  ggplot2::labs(subtitle = "(A)") + 
+  guides(colour = guide_legend(nrow = 1)) + 
+  ggplot2::theme(text = element_text(size = 15),
+                 legend.title = element_blank(),
+                 axis.title.y = element_blank(),
+                 axis.line.y = element_blank(), 
+                 axis.ticks.y = element_blank(), 
+                 axis.text.y = element_blank(), 
+                 legend.position = "bottom") 
+asv_num_tree_barplot
+
+################Relative abundance#######################
+
+alb_bark_fagus_only_otu <- subset(otu_table(physeq_alb_bark), 
+                            rownames(otu_table(physeq_alb_bark)) %in% alb_tree_list_bark$Fagus_sylvatica)
+
+alb_bark_picea_only_otu <- base::subset(otu_table(physeq_alb_bark), 
+                                  rownames(otu_table(physeq_alb_bark)) %in% alb_tree_list_bark$Picea_abies)
+
+alb_bark_shared_otu <- subset(otu_table(physeq_alb_bark), 
+                         rownames(otu_table(physeq_alb_bark)) %in% alb_tree_list_bark$Fagus_sylvatica__Picea_abies)
+
+rel_abund_bark_fagus_only_alb <- round(sum(colSums(alb_bark_fagus_only_otu)) /
+                                   sum(taxa_sums(physeq_alb_bark)) * 100, 2)
+rel_abund_bark_fagus_only_alb
+
+rel_abund_bark_picea_only_alb <- round(sum(colSums(alb_bark_picea_only_otu)) /
+                                   sum(taxa_sums(physeq_alb_bark)) * 100, 2)
+rel_abund_bark_picea_only_alb
+
+rel_abund_bark_shared_alb <- round(sum(colSums(alb_bark_shared_otu)) /
+                                sum(taxa_sums(physeq_alb_bark)) * 100, 2)
+rel_abund_bark_shared_alb
+
+rel_abund_fagus_total_alb_bark <- round(sum(taxa_sums(physeq_alb_bark_fagus)) /
+                                     sum(taxa_sums(physeq_alb_bark)) * 100, 2)
+rel_abund_fagus_total_alb_bark
+
+rel_abund_picea_total_alb_bark <- round(sum(taxa_sums(physeq_alb_bark_picea)) /
+                                     sum(taxa_sums(physeq_alb_bark)) * 100, 2)
+rel_abund_picea_total_alb_bark
+
+rel_abund_alb_tree_df_bark <- base::data.frame(exploratory = "Swabian Alb bark",
+                                               value = c(rel_abund_bark_fagus_only_alb, 
+                                                         rel_abund_bark_picea_only_alb,
+                                                         rel_abund_bark_shared_alb,
+                                                         rel_abund_fagus_total_alb_bark,
+                                                         rel_abund_picea_total_alb_bark),
+                                               variable = c("Fagus only",
+                                                            "Picea only",
+                                                            "shared",
+                                                            "Fagus total",
+                                                            "Picea total"),
+                                               stack = c(rep("yes", 3),
+                                                         rep("no", 2)))
+
+alb_soil_fagus_only_otu <- subset(otu_table(physeq_alb_soil), 
+                                  rownames(otu_table(physeq_alb_soil)) %in% alb_tree_list_soil$Fagus_sylvatica)
+
+alb_soil_picea_only_otu <- base::subset(otu_table(physeq_alb_soil), 
+                                        rownames(otu_table(physeq_alb_soil)) %in% alb_tree_list_soil$Picea_abies)
+
+alb_soil_shared_otu <- subset(otu_table(physeq_alb_soil), 
+                              rownames(otu_table(physeq_alb_soil)) %in% alb_tree_list_soil$Fagus_sylvatica__Picea_abies)
+
+rel_abund_soil_fagus_only_alb <- round(sum(colSums(alb_soil_fagus_only_otu)) /
+                                         sum(taxa_sums(physeq_alb_soil)) * 100, 2)
+rel_abund_soil_fagus_only_alb
+
+rel_abund_soil_picea_only_alb <- round(sum(colSums(alb_soil_picea_only_otu)) /
+                                         sum(taxa_sums(physeq_alb_soil)) * 100, 2)
+rel_abund_soil_picea_only_alb
+
+rel_abund_soil_shared_alb <- round(sum(colSums(alb_soil_shared_otu)) /
+                                     sum(taxa_sums(physeq_alb_soil)) * 100, 2)
+rel_abund_soil_shared_alb
+
+rel_abund_fagus_total_alb_soil <- round(sum(taxa_sums(physeq_alb_soil_fagus)) /
+                                          sum(taxa_sums(physeq_alb_soil)) * 100, 2)
+rel_abund_fagus_total_alb_soil
+
+rel_abund_picea_total_alb_soil <- round(sum(taxa_sums(physeq_alb_soil_picea)) /
+                                          sum(taxa_sums(physeq_alb_soil)) * 100, 2)
+rel_abund_picea_total_alb_soil
+
+rel_abund_alb_tree_df_soil <- base::data.frame(exploratory = "Swabian Alb soil",
+                                               value = c(rel_abund_soil_fagus_only_alb, 
+                                                         rel_abund_soil_picea_only_alb,
+                                                         rel_abund_soil_shared_alb,
+                                                         rel_abund_fagus_total_alb_soil,
+                                                         rel_abund_picea_total_alb_soil),
+                                               variable = c("Fagus only",
+                                                            "Picea only",
+                                                            "shared",
+                                                            "Fagus total",
+                                                            "Picea total"),
+                                               stack = c(rep("yes", 3),
+                                                         rep("no", 2)))
+
+sch_bark_fagus_only_otu <- subset(otu_table(physeq_sch_bark), 
+                                  rownames(otu_table(physeq_sch_bark)) %in% sch_tree_list_bark$Fagus_sylvatica)
+
+sch_bark_pinus_only_otu <- base::subset(otu_table(physeq_sch_bark), 
+                                        rownames(otu_table(physeq_sch_bark)) %in% sch_tree_list_bark$Pinus_sylvestris)
+
+sch_bark_shared_otu <- subset(otu_table(physeq_sch_bark), 
+                              rownames(otu_table(physeq_sch_bark)) %in% sch_tree_list_bark$Fagus_sylvatica__Pinus_sylvestris)
+
+rel_abund_bark_fagus_only_sch <- round(sum(colSums(sch_bark_fagus_only_otu)) /
+                                         sum(taxa_sums(physeq_sch_bark)) * 100, 2)
+rel_abund_bark_fagus_only_sch
+
+rel_abund_bark_pinus_only_sch <- round(sum(colSums(sch_bark_pinus_only_otu)) /
+                                         sum(taxa_sums(physeq_sch_bark)) * 100, 2)
+rel_abund_bark_pinus_only_sch
+
+rel_abund_bark_shared_sch <- round(sum(colSums(sch_bark_shared_otu)) /
+                                     sum(taxa_sums(physeq_sch_bark)) * 100, 2)
+rel_abund_bark_shared_sch
+
+rel_abund_fagus_total_sch_bark <- round(sum(taxa_sums(physeq_sch_bark_fagus)) /
+                                          sum(taxa_sums(physeq_sch_bark)) * 100, 2)
+rel_abund_fagus_total_sch_bark
+
+rel_abund_pinus_total_sch_bark <- round(sum(taxa_sums(physeq_sch_bark_pinus)) /
+                                          sum(taxa_sums(physeq_sch_bark)) * 100, 2)
+rel_abund_pinus_total_sch_bark
+
+rel_abund_sch_tree_df_bark <- base::data.frame(exploratory = "Schorfheide- Chorin bark",
+                                               value = c(rel_abund_bark_fagus_only_sch, 
+                                                         rel_abund_bark_pinus_only_sch,
+                                                         rel_abund_bark_shared_sch,
+                                                         rel_abund_fagus_total_sch_bark,
+                                                         rel_abund_pinus_total_sch_bark),
+                                               variable = c("Fagus only",
+                                                            "Pinus only",
+                                                            "shared",
+                                                            "Fagus total",
+                                                            "Pinus total"),
+                                               stack = c(rep("yes", 3),
+                                                         rep("no", 2)))
+
+sch_soil_fagus_only_otu <- subset(otu_table(physeq_sch_soil), 
+                                  rownames(otu_table(physeq_sch_soil)) %in% sch_tree_list_soil$Fagus_sylvatica)
+
+sch_soil_pinus_only_otu <- base::subset(otu_table(physeq_sch_soil), 
+                                        rownames(otu_table(physeq_sch_soil)) %in% sch_tree_list_soil$Pinus_sylvestris)
+
+sch_soil_shared_otu <- subset(otu_table(physeq_sch_soil), 
+                              rownames(otu_table(physeq_sch_soil)) %in% sch_tree_list_soil$Fagus_sylvatica__Pinus_sylvestris)
+
+rel_abund_soil_fagus_only_sch <- round(sum(colSums(sch_soil_fagus_only_otu)) /
+                                         sum(taxa_sums(physeq_sch_soil)) * 100, 2)
+rel_abund_soil_fagus_only_sch
+
+rel_abund_soil_pinus_only_sch <- round(sum(colSums(sch_soil_pinus_only_otu)) /
+                                         sum(taxa_sums(physeq_sch_soil)) * 100, 2)
+rel_abund_soil_pinus_only_sch
+
+rel_abund_soil_shared_sch <- round(sum(colSums(sch_soil_shared_otu)) /
+                                     sum(taxa_sums(physeq_sch_soil)) * 100, 2)
+rel_abund_soil_shared_sch
+
+rel_abund_fagus_total_sch_soil <- round(sum(taxa_sums(physeq_sch_soil_fagus)) /
+                                          sum(taxa_sums(physeq_sch_soil)) * 100, 2)
+rel_abund_fagus_total_sch_soil
+
+rel_abund_pinus_total_sch_soil <- round(sum(taxa_sums(physeq_sch_soil_pinus)) /
+                                          sum(taxa_sums(physeq_sch_soil)) * 100, 2)
+rel_abund_pinus_total_sch_soil
+
+rel_abund_sch_tree_df_soil <- base::data.frame(exploratory = "Schorfheide- Chorin soil",
+                                               value = c(rel_abund_soil_fagus_only_sch, 
+                                                         rel_abund_soil_pinus_only_sch,
+                                                         rel_abund_soil_shared_sch,
+                                                         rel_abund_fagus_total_sch_soil,
+                                                         rel_abund_pinus_total_sch_soil),
+                                               variable = c("Fagus only",
+                                                            "Pinus only",
+                                                            "shared",
+                                                            "Fagus total",
+                                                            "Pinus total"),
+                                               stack = c(rep("yes", 3),
+                                                         rep("no", 2)))
+
+
+# Combine the regional dataframes. 
+rel_abund_full_tree_df <- rbind(rel_abund_sch_tree_df_soil,
+                                rel_abund_sch_tree_df_bark,
+                                rel_abund_alb_tree_df_soil,
+                                rel_abund_alb_tree_df_bark)
+
+rel_abund_full_tree_df$exploratory <- base::factor(rel_abund_full_tree_df$exploratory, 
+                                                   levels = c("Swabian Alb bark",
+                                                              "Swabian Alb soil",
+                                                              "Schorfheide- Chorin bark",
+                                                              "Schorfheide- Chorin soil"))
+
+rel_abund_full_tree_df$variable <- base::factor(rel_abund_full_tree_df$variable,
+                                      levels = c("shared",
+                                                 "Fagus only",
+                                                 "Picea only",
+                                                 "Fagus total",
+                                                 "Picea total",
+                                                 "Pinus only",
+                                                 "Pinus total"))
+# Create barplot.
+rel_abund_tree_barplot <- ggpubr::ggbarplot(rel_abund_full_tree_df, x = "stack", y = "value", 
+                  fill = "variable", color = "variable", width = 0.9,
+                  palette = c("#009E73",
+                              "#E69F00",
+                              "#56B4E9",
+                              ggplot2::alpha("#E69F00", 0.7),
+                              ggplot2::alpha("#56B4E9", 0.7),
+                              "#26547C",
+                              ggplot2::alpha("#26547C", 0.7))) +
+  ggplot2::facet_grid("exploratory",
+                      space="free", scales="free", switch = "y",
+                      labeller = label_wrap_gen(width = 15)) +
+  ggplot2::scale_x_discrete(position = "top", limits = c("no", "yes")) +
+  ggplot2::coord_flip() + 
+  ggplot2::ylab("Relative abundance (%)") + 
+  ggplot2::labs(subtitle = "(B)") + 
+  guides(colour = guide_legend(nrow = 1)) + 
+  ggplot2::theme(text = element_text(size = 15),
+                 legend.title = element_blank(),
+                 axis.title.y = element_blank(),
+                 axis.line.y = element_blank(), 
+                 axis.ticks.y = element_blank(), 
+                 axis.text.y = element_blank(), 
+                 legend.position = "bottom") 
+rel_abund_tree_barplot
+
+
+# Create the two final figures.
+
+substrate_differences <- ggpubr::ggarrange(asv_num_substrate_barplot, rel_abund_substrate_barplot,
+                                      ncol = 2, nrow = 1,
+                                      legend = "bottom", common.legend = T)
+substrate_differences
+
+ggsave('substrate_differences.tiff', device = 'tiff',
+       substrate_differences, width = 400, height = 240,
+       units = 'mm', dpi = 300)
+
+tree_differences <- ggpubr::ggarrange(asv_num_tree_barplot, rel_abund_tree_barplot,
+                                           ncol = 2, nrow = 1,
+                                           legend = "bottom", common.legend = T)
+tree_differences
+
+ggsave('tree_differences.tiff', device = 'tiff',
+       tree_differences, width = 400, height = 240,
+       units = 'mm', dpi = 300)
