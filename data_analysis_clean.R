@@ -352,9 +352,14 @@ ordination_sch <- phyloseq::plot_ordination(physeq_sch, nmds_sch, type="samples"
 ordination_sch
 
 # Run the ordination on the full dataset to grab a nice legend. 
-nmds_full <- phyloseq::ordinate(filtered_physeq, method = "NMDS", distance = "bray")
+full_ordination_ps <- filtered_physeq
+sample_data(full_ordination_ps) <- data.frame(sample_data(full_ordination_ps)) %>% 
+  dplyr::rename(habitat = substrate)
 
-ordination_full <- phyloseq::plot_ordination(filtered_physeq, nmds_full, type="samples", color="dominant_tree", shape="substrate") + 
+nmds_full <- phyloseq::ordinate(full_ordination_ps, method = "NMDS", distance = "bray")
+
+ordination_full <- phyloseq::plot_ordination(full_ordination_ps, nmds_full,
+                                             type="samples", color="dominant_tree", shape="habitat") + 
   ggplot2::geom_point(size = 4) +
   ggplot2::stat_ellipse(ggplot2::aes(group = dominant_tree), linetype = 2) +
   ggplot2::scale_colour_manual(values = c("green", "darkgreen", "darkolivegreen4"), name = "tree species",
@@ -365,7 +370,7 @@ ordination_full <- phyloseq::plot_ordination(filtered_physeq, nmds_full, type="s
         legend.direction = "vertical",
         legend.spacing = ggplot2::unit(2,"cm"),
         axis.text = ggplot2::element_text(size = 15), 
-        axis.title = ggplot2::element_text(size = 15))
+        axis.title = ggplot2::element_text(size = 15)) 
 
 ordination_full
 
@@ -423,7 +428,7 @@ alb_variance_lm <- modEvA::varPart(A = summary(lm_substrate_alb)$r.squared,
                                  B.name = "Tree") %>% 
   mutate(across(Proportion, round, 3)) %>% 
   tibble::rownames_to_column() %>%  
-  tibble::add_column(variable = c("Substrate", "Dominant tree", "Overlap", "Unexplained")) %>% 
+  tibble::add_column(variable = c("Habitat", "Dominant tree", "Overlap", "Unexplained")) %>% 
   dplyr::select(variable, Proportion)
 alb_variance_lm
 
@@ -459,7 +464,7 @@ sch_variance_lm <- modEvA::varPart(A = summary(lm_substrate_sch)$r.squared,
                                    B.name = "Tree") %>% 
   mutate(across(Proportion, round, 3)) %>% 
   tibble::rownames_to_column() %>%  
-  tibble::add_column(variable = c("Substrate", "Dominant tree", "Overlap", "Unexplained")) %>% 
+  tibble::add_column(variable = c("Habitat", "Dominant tree", "Overlap", "Unexplained")) %>% 
   dplyr::select(variable, Proportion)
 sch_variance_lm
 
@@ -490,7 +495,7 @@ varp_alb <- vegan::varpart(otu_alb, ~ substrate, ~ dominant_tree, data = data_al
 
 indfract_adj_r_alb <- varp_alb$part$indfract %>% 
   tibble::rownames_to_column()  %>%  
-  tibble::add_column(variable = c("Substrate", "Overlap", "Dominant tree", "Unexplained")) %>% 
+  tibble::add_column(variable = c("Habitat", "Overlap", "Dominant tree", "Unexplained")) %>% 
   dplyr::select(variable, Adj.R.squared) %>% 
   dplyr::rename(Proportion = Adj.R.squared) %>% 
   dplyr::mutate(across(Proportion, .fns = round, 3))
@@ -510,7 +515,7 @@ varp_sch <- vegan::varpart(otu_sch, ~ substrate, ~ dominant_tree, data = data_sc
 
 indfract_adj_r_sch <- varp_sch$part$indfract %>% 
   tibble::rownames_to_column()  %>%  
-  tibble::add_column(variable = c("Substrate", "Overlap", "Dominant tree", "Unexplained")) %>% 
+  tibble::add_column(variable = c("Habitat", "Overlap", "Dominant tree", "Unexplained")) %>% 
   dplyr::select(variable, Adj.R.squared) %>% 
   dplyr::rename(Proportion = Adj.R.squared) %>% 
   dplyr::mutate(across(Proportion, .fns = round, 3))
@@ -568,7 +573,7 @@ variance_barplot <- ggpubr::ggbarplot(variance_full, x = "exploratory", y = "var
   ggplot2::ylab("Explained Variance") + 
   ggplot2::theme(text = element_text(size = 15),
                  legend.title = element_blank(),
-                 legend.position = c(1.1,0.5),
+                 legend.position = c(1.05,0.5),
                  axis.title.y = element_blank(),
                  axis.line.y = element_blank(), 
                  axis.ticks.y = element_blank()) 
@@ -1117,7 +1122,6 @@ fun_between_S <- igraph::betweenness(fun.mb_S, directed = F)
 
 # Sort them by their values and subset to the top 5.
 fun_top5_between_S <- base::sort(fun_between_S, decreasing = T)[1:5]
-
 # Get the names.
 names(fun_top5_between_S)
 
@@ -1129,7 +1133,7 @@ phyloseq::tax_table(hub_taxa_fun_S)
 
 ##----------------------------------------------------------------
 ##                          Section 9.1                          -
-##          Relative abundances of substrates in network         -
+##          Relative abundances of habitats in network           -
 ##----------------------------------------------------------------
 
 ################Swabian Alb#######################
@@ -1478,8 +1482,8 @@ full_substrate_df$variable <- base::factor(full_substrate_df$variable,
 asv_num_substrate_barplot <- ggpubr::ggbarplot(full_substrate_df, x = "stack", y = "value", 
                   fill = "variable", color = "variable", width = 0.9,
                   palette = c("#009E73",  "#E69F00", "#56B4E9",
-                              ggplot2::alpha("#E69F00", 0.7),
-                              ggplot2::alpha("#56B4E9", 0.7))) +
+                              ggplot2::alpha("#E69F00", 0.5),
+                              ggplot2::alpha("#56B4E9", 0.5))) +
   ggplot2::facet_grid("exploratory",
                       space="free", scales="free", switch = "y") +
   ggplot2::scale_x_discrete(position = "top", limits = c("no2", "no1", "yes")) +
@@ -1603,8 +1607,8 @@ rel_abund_substrate_barplot <- ggpubr::ggbarplot(rel_abund_full_substrate_df, x 
                   palette = c("#009E73",
                               "#E69F00",
                               "#56B4E9",
-                              ggplot2::alpha("#E69F00", 0.7),
-                              ggplot2::alpha("#56B4E9", 0.7))) +
+                              ggplot2::alpha("#E69F00", 0.5),
+                              ggplot2::alpha("#56B4E9", 0.5))) +
   ggplot2::facet_grid("exploratory",
                       space="free", scales="free", switch = "y") +
   ggplot2::scale_x_discrete(position = "top", limits = c("no", "yes")) +
@@ -1736,10 +1740,10 @@ asv_num_tree_barplot <- ggpubr::ggbarplot(full_tree_df, x = "stack", y = "value"
                   palette = c("#009E73",
                               "#E69F00",
                               "#56B4E9",
-                              ggplot2::alpha("#E69F00", 0.7),
-                              ggplot2::alpha("#56B4E9", 0.7),
+                              ggplot2::alpha("#E69F00", 0.5),
+                              ggplot2::alpha("#56B4E9", 0.5),
                               "#26547C",
-                              ggplot2::alpha("#26547C", 0.7))) +
+                              ggplot2::alpha("#26547C", 0.5))) +
   ggplot2::facet_grid("exploratory",
                       space="free", scales="free", switch = "y",
                       labeller = label_wrap_gen(width = 15)) +
@@ -1958,10 +1962,10 @@ rel_abund_tree_barplot <- ggpubr::ggbarplot(rel_abund_full_tree_df, x = "stack",
                   palette = c("#009E73",
                               "#E69F00",
                               "#56B4E9",
-                              ggplot2::alpha("#E69F00", 0.7),
-                              ggplot2::alpha("#56B4E9", 0.7),
+                              ggplot2::alpha("#E69F00", 0.5),
+                              ggplot2::alpha("#56B4E9", 0.5),
                               "#26547C",
-                              ggplot2::alpha("#26547C", 0.7))) +
+                              ggplot2::alpha("#26547C", 0.5))) +
   ggplot2::facet_grid("exploratory",
                       space="free", scales="free", switch = "y",
                       labeller = label_wrap_gen(width = 15)) +
