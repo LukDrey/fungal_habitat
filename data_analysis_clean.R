@@ -73,7 +73,6 @@ fungi_tax_fin <- fungi_tax_fin %>%
 # Rename the ASV_ID column. 
 fungi_tax_fin <- dplyr::rename(fungi_tax_fin, ASV_ID = seq_name_fungi)
 
-
 # Set rownames.
 base::row.names(fungi_tax_fin) <- fungi_tax_fin$ASV_ID
 
@@ -582,6 +581,7 @@ variance_barplot
 ggsave('variance_barplot.tiff', device = 'tiff',
        variance_barplot, width = 400, height = 240,
        units = 'mm', dpi = 300)
+
 #################################################################
 ##                          Section 7                          ##
 ##                        Venn diagrams                        ##
@@ -752,8 +752,6 @@ ggsave('final_venn_diagrams.tiff', device = 'tiff',
 ##              Community Composition Barplots                 ##
 #################################################################
 
-my_cols <- paletteer::paletteer_d('ggsci::default_igv')
-
 ############## Swabian Alb ###############
 physeq_alb_barplot <- physeq_alb
 phyloseq::sample_data(physeq_alb_barplot) <- phyloseq::sample_data(physeq_alb) %>% 
@@ -795,62 +793,6 @@ sampledata_alb$tree_substrate <- factor(sampledata_alb$tree_substrate,
 
 phyloseq::sample_data(phy_alb_ord_top25_named_plot) <- phyloseq::sample_data(sampledata_alb)
 
-# Custom plotting to make a nice stacked barplot. 
-alb_ord_soil_plots <- phyloseq::subset_samples(phy_alb_ord_top25_named_plot, substrate == "soil") %>%
-  microbiome::plot_composition(group_by =  'tree_substrate', otu.sort = taxa_names_alb_ord) +
-  scale_fill_manual(values = ggplot2::alpha(my_cols, 0.9), name = 'Order') +
-  guides(fill = guide_legend(title.position = 'top', nrow = 3)) +
-  theme(panel.grid.major.x = element_blank(), 
-        panel.grid.major.y = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.background = element_blank(),
-        axis.line = element_blank(),
-        axis.ticks = element_line(colour = 'black', size = 0.5),
-        axis.text.x =  element_blank(),
-        axis.text.y =  element_text(colour = "black", size = 10),
-        axis.title = element_text(colour = "black", size = 10),
-        legend.position = 'bottom', 
-        plot.title = element_text(vjust = -4, hjust = 0.03), 
-        legend.text = element_text(colour = 'black', size = 7),
-        legend.title =  element_text(size = 10),
-        legend.key.size = unit(2.5, 'mm'),
-        axis.ticks.length.x = unit(-0.2, "cm"), 
-        legend.box.spacing = unit(-4, 'mm'),
-        legend.background = element_rect(fill = 'transparent'),
-        text = element_text(colour = 'black', size = 20)) + 
-  xlab('Sample') +
-  ylab('Relative Abundance') + 
-  labs(subtitle = "(B)")  
-alb_ord_soil_plots
-
-# Custom plotting to make a nice stacked barplot. 
-alb_ord_bark_plots <- phyloseq::subset_samples(phy_alb_ord_top25_named_plot, substrate == "bark") %>%
-  microbiome::plot_composition(group_by =  'tree_substrate', otu.sort = taxa_names_alb_ord) +
-  scale_fill_manual(values = ggplot2::alpha(my_cols, 0.9), name = 'Order') +
-  guides(fill = guide_legend(title.position = 'top', ncol = 10)) +
-  theme(panel.grid.major.x = element_blank(), 
-        panel.grid.major.y = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.background = element_blank(),
-        axis.line = element_blank(),
-        axis.ticks = element_line(colour = 'black', size = 0.5),
-        axis.text.x =  element_blank(),
-        axis.text.y =  element_text(colour = "black", size = 10),
-        axis.title.x = element_text(colour = "black", size = 10),
-        axis.title.y = element_text(colour = "black", size = 10),
-        legend.position = 'bottom', 
-        plot.title = element_text(vjust = -4, hjust = 0.03), 
-        legend.text = element_text(colour = 'black', size = 7),
-        legend.title =  element_text(size = 10),
-        legend.key.size = unit(2.5, 'mm'),
-        axis.ticks.length.x = unit(-0.2, "cm"), 
-        legend.box.spacing = unit(-4, 'mm'),
-        legend.background = element_rect(fill = 'transparent'),
-        text = element_text(colour = 'black', size = 20)) + 
-  xlab('Sample') +
-  ylab('Relative Abundance') + 
-  labs(title = 'Swabian Alb', subtitle = "(A)")
-alb_ord_bark_plots
 
 ############## Schorfheide-Chorin ###############
 physeq_sch_barplot <- physeq_sch
@@ -895,11 +837,65 @@ sampledata_sch$tree_substrate <- factor(sampledata_sch$tree_substrate,
 
 phyloseq::sample_data(phy_sch_ord_top25_named_plot) <- phyloseq::sample_data(sampledata_sch)
 
+
+#################################################################
+##                          Section 8.2                        ##
+##              Create great looking plots                     ##
+#################################################################
+
+my_cols <- Polychrome::createPalette(33, seedcolors = c("#ff0000", "#00ff00", "#0000ff"))
+
+unique_orders <- sort(unique(c(taxa_names_alb_ord, taxa_names_sch_ord))) 
+
+custom_sort <- c("Agaricales", "Archaeorhizomycetales",
+                 "Atheliales", "Boletales",
+                 "Caliciales", "Cantharellales",
+                 "Capnodiales", "Chaetothyriales",
+                 "Eurotiales", "Filobasidiales",
+                 "Helotiales", "Hypocreales",
+                 "Lecanorales", "Mortierellales",
+                 "Mycosphaerellales", "Mytilinidales",
+                 "Orbiliales", "Pezizales", "Phaeothecales",
+                 "Pleosporales", "Russulales",
+                 "Sebacinales", "Thelebolales",
+                 "Thelephorales", "Trapeliales", 
+                 "Tremellales", "Umbelopsidales", "Verrucariales",
+                 "Unknown Ascomycota (Phylum)", "Unknown Dothideomycetes (Class)",
+                 "Unknown Fungi (Kingdom)", "Unknown Rozellomycota (Phylum)",
+                              "Other")
+
+full_cols <- data.frame(order = custom_sort, color = my_cols)
+
+alb_cols <- full_cols %>% 
+  dplyr::filter(order %in% taxa_names_alb_ord)
+
+sch_cols <- full_cols %>% 
+  dplyr::filter(order %in% taxa_names_sch_ord)
+
+
+scale_fill_alb <- function(...){
+  ggplot2:::manual_scale(
+    'fill', 
+    values = setNames(alb_cols$color, alb_cols$order), 
+    ...
+  )
+}
+
+scale_fill_sch <- function(...){
+  ggplot2:::manual_scale(
+    'fill', 
+    values = setNames(sch_cols$color, sch_cols$order), 
+    ...
+  )
+}
+
+############## Swabian Alb ###############
+
 # Custom plotting to make a nice stacked barplot. 
-sch_ord_soil_plots <- phyloseq::subset_samples(phy_sch_ord_top25_named_plot, substrate == "soil") %>% 
-  microbiome::plot_composition(group_by =  'tree_substrate', otu.sort = taxa_names_sch_ord) +
-  scale_fill_manual(values = ggplot2::alpha(my_cols, 0.9), name = 'Order') +
-  guides(fill = guide_legend(title.position = 'top', ncol = 10)) +
+alb_ord_soil_plots <- phyloseq::subset_samples(phy_alb_ord_top25_named_plot, substrate == "soil") %>%
+  microbiome::plot_composition(group_by =  'tree_substrate', otu.sort = alb_cols$order) +
+  scale_fill_alb() +
+  guides(fill = guide_legend(title.position = 'top', nrow = 3)) +
   theme(panel.grid.major.x = element_blank(), 
         panel.grid.major.y = element_blank(),
         panel.grid.minor = element_blank(),
@@ -917,15 +913,17 @@ sch_ord_soil_plots <- phyloseq::subset_samples(phy_sch_ord_top25_named_plot, sub
         axis.ticks.length.x = unit(-0.2, "cm"), 
         legend.box.spacing = unit(-4, 'mm'),
         legend.background = element_rect(fill = 'transparent'),
-        text = element_text(colour = 'black', size = 20)) + 
+        text = element_text(colour = 'black', size = 20),
+        strip.text = element_text(face = "italic")) + 
   xlab('Sample') +
   ylab('Relative Abundance') + 
-  labs(subtitle = "(B)")   
-sch_ord_soil_plots
+  labs(subtitle = "(B)")  
+alb_ord_soil_plots
 
-sch_ord_bark_plots <- phyloseq::subset_samples(phy_sch_ord_top25_named_plot, substrate == "bark") %>% 
-  microbiome::plot_composition(group_by =  'tree_substrate', otu.sort = taxa_names_sch_ord) +
-  scale_fill_manual(values = ggplot2::alpha(my_cols, 0.9), name = 'Order') +
+# Custom plotting to make a nice stacked barplot. 
+alb_ord_bark_plots <- phyloseq::subset_samples(phy_alb_ord_top25_named_plot, substrate == "bark") %>%
+  microbiome::plot_composition(group_by =  'tree_substrate', otu.sort = alb_cols$order) +
+  scale_fill_alb() +
   guides(fill = guide_legend(title.position = 'top', ncol = 10)) +
   theme(panel.grid.major.x = element_blank(), 
         panel.grid.major.y = element_blank(),
@@ -945,12 +943,72 @@ sch_ord_bark_plots <- phyloseq::subset_samples(phy_sch_ord_top25_named_plot, sub
         axis.ticks.length.x = unit(-0.2, "cm"), 
         legend.box.spacing = unit(-4, 'mm'),
         legend.background = element_rect(fill = 'transparent'),
-        text = element_text(colour = 'black', size = 20)) + 
+        text = element_text(colour = 'black', size = 20),
+        strip.text = element_text(face = "italic")) + 
+  xlab('Sample') +
+  ylab('Relative Abundance') + 
+  labs(title = 'Swabian Alb', subtitle = "(A)")
+alb_ord_bark_plots
+
+############## Schorfheide-Chorin ###############
+
+# Custom plotting to make a nice stacked barplot. 
+sch_ord_soil_plots <- phyloseq::subset_samples(phy_sch_ord_top25_named_plot, substrate == "soil") %>% 
+  microbiome::plot_composition(group_by =  'tree_substrate', otu.sort = sch_cols$order) +
+  scale_fill_sch() +
+  guides(fill = guide_legend(title.position = 'top', ncol = 10)) +
+  theme(panel.grid.major.x = element_blank(), 
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.line = element_blank(),
+        axis.ticks = element_line(colour = 'black', size = 0.5),
+        axis.text.x =  element_blank(),
+        axis.text.y =  element_text(colour = "black", size = 10),
+        axis.title = element_text(colour = "black", size = 10),
+        legend.position = 'bottom', 
+        plot.title = element_text(vjust = -4, hjust = 0.03), 
+        legend.text = element_text(colour = 'black', size = 7),
+        legend.title =  element_text(size = 10),
+        legend.key.size = unit(2.5, 'mm'),
+        axis.ticks.length.x = unit(-0.2, "cm"), 
+        legend.box.spacing = unit(-4, 'mm'),
+        legend.background = element_rect(fill = 'transparent'),
+        text = element_text(colour = 'black', size = 20),
+        strip.text = element_text(face = "italic")) + 
+  xlab('Sample') +
+  ylab('Relative Abundance') + 
+  labs(subtitle = "(B)")   
+sch_ord_soil_plots
+
+sch_ord_bark_plots <- phyloseq::subset_samples(phy_sch_ord_top25_named_plot, substrate == "bark") %>% 
+  microbiome::plot_composition(group_by =  'tree_substrate', otu.sort = sch_cols$order) +
+  scale_fill_sch() +
+  guides(fill = guide_legend(title.position = 'top', ncol = 10)) +
+  theme(panel.grid.major.x = element_blank(), 
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.line = element_blank(),
+        axis.ticks = element_line(colour = 'black', size = 0.5),
+        axis.text.x =  element_blank(),
+        axis.text.y =  element_text(colour = "black", size = 10),
+        axis.title.x = element_text(colour = "black", size = 10),
+        axis.title.y = element_text(colour = "black", size = 10),
+        legend.position = 'bottom', 
+        plot.title = element_text(vjust = -4, hjust = 0.03), 
+        legend.text = element_text(colour = 'black', size = 7),
+        legend.title =  element_text(size = 10),
+        legend.key.size = unit(2.5, 'mm'),
+        axis.ticks.length.x = unit(-0.2, "cm"), 
+        legend.box.spacing = unit(-4, 'mm'),
+        legend.background = element_rect(fill = 'transparent'),
+        text = element_text(colour = 'black', size = 20),
+        strip.text = element_text(face = "italic")) + 
   xlab('Sample') +
   ylab('Relative Abundance') + 
   labs(title = 'Schorfheide-Chorin', subtitle = "(A)") 
 sch_ord_bark_plots
-
 
 ######## Create final arranged plot #######
 
