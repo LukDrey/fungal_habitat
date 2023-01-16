@@ -232,10 +232,10 @@ combined_rare_curves <- ggpubr::ggarrange(rare_alb, rare_sch,
                                           ncol = 2, nrow = 1)
 combined_rare_curves
 
-ggsave('combined_rare_curves.tiff', device = 'tiff',
-       combined_rare_curves, width = 400, height = 240,
-       units = 'mm', dpi = 300)  
-#################################################################
+# #ggsave('combined_rare_curves.tiff', device = 'tiff',
+#        combined_rare_curves, width = 400, height = 240,
+#        units = 'mm', dpi = 300)  
+# #################################################################
 ##                          Section 4                          ##
 ##                   Alpha diversity analyses                  ##
 #################################################################
@@ -382,9 +382,52 @@ ordination_final <- ggpubr::ggarrange(ordination_alb, ordination_sch,
                                       legend = "right", legend.grob = ordination_legend)
 ordination_final
 
-ggsave('ordination_final.tiff', device = 'tiff',
-       ordination_final, width = 400, height = 240,
-       units = 'mm', dpi = 300)
+# #ggsave('ordination_final.tiff', device = 'tiff',
+#        ordination_final, width = 400, height = 240,
+#        units = 'mm', dpi = 300)
+
+#########################PERMANOVA and Betadisper############################
+# Swabian Alb
+
+bray_mat_alb <- phyloseq::distance(physeq_alb, method = "bray")
+# Run the PERMANOVA analysis thorugh vegans adonis2() including both effects of habitat and tree species.
+vegan::adonis2(bray_mat_alb ~ factor(phyloseq::sample_data(physeq_alb)$substrate) +
+                 factor(phyloseq::sample_data(physeq_alb)$dominant_tree), by = 'margin')
+
+# Test the within group dispersion for the substrate.
+dispr_substrate_alb <- vegan::betadisper(bray_mat_alb, 
+                                          factor(phyloseq::sample_data(physeq_alb)$substrate))
+dispr_substrate_alb
+
+permutest(dispr_substrate_alb)
+
+# Test the within group dispersion for the tree Species.
+dispr_tree_alb <- vegan::betadisper(bray_mat_alb, 
+                                         factor(phyloseq::sample_data(physeq_alb)$dominant_tree))
+dispr_tree_alb
+
+permutest(dispr_tree_alb)
+
+# Schorfheide-Chorin 
+
+bray_mat_sch <- phyloseq::distance(physeq_sch, method = "bray")
+# Run the PERMANOVA analysis thorugh vegans adonis2() including both effects of habitat and tree species.
+vegan::adonis2(bray_mat_sch ~ factor(phyloseq::sample_data(physeq_sch)$substrate) +
+                 factor(phyloseq::sample_data(physeq_sch)$dominant_tree), by = 'margin')
+
+# Test the within group dispersion for the substrate.
+dispr_substrate_sch <- vegan::betadisper(bray_mat_sch, 
+                                         factor(phyloseq::sample_data(physeq_sch)$substrate))
+dispr_substrate_sch
+
+vegan::permutest(dispr_substrate_sch)
+
+# Test the within group dispersion for the tree Species.
+dispr_tree_sch <- vegan::betadisper(bray_mat_sch, 
+                                    factor(phyloseq::sample_data(physeq_sch)$dominant_tree))
+dispr_tree_sch
+
+vegan::permutest(dispr_tree_sch)
 
 #################################################################
 ##                          Section 6                          ##
@@ -578,9 +621,9 @@ variance_barplot <- ggpubr::ggbarplot(variance_full, x = "exploratory", y = "var
                  axis.ticks.y = element_blank()) 
 variance_barplot
 
-ggsave('variance_barplot.tiff', device = 'tiff',
-       variance_barplot, width = 400, height = 240,
-       units = 'mm', dpi = 300)
+# #ggsave('variance_barplot.tiff', device = 'tiff',
+#        variance_barplot, width = 400, height = 240,
+#        units = 'mm', dpi = 300)
 
 #################################################################
 ##                          Section 7                          ##
@@ -743,9 +786,9 @@ final_venn_diagrams <- ggpubr::ggarrange(venn_bark_alb, venn_soil_alb,
                                          labels = "AUTO")
 final_venn_diagrams
 
-ggsave('final_venn_diagrams.tiff', device = 'tiff',
-       final_venn_diagrams, width = 400, height = 600,
-       units = 'mm', dpi = 300)
+# #ggsave('final_venn_diagrams.tiff', device = 'tiff',
+#        final_venn_diagrams, width = 400, height = 600,
+#        units = 'mm', dpi = 300)
 
 #################################################################
 ##                          Section 8                          ##
@@ -1017,18 +1060,18 @@ final_alb_community_barplot <- ggpubr::ggarrange(alb_ord_bark_plots, alb_ord_soi
                                                  legend = "bottom", common.legend = TRUE)
 final_alb_community_barplot
 
-ggsave('final_alb_community_barplot.tiff', device = 'tiff',
-       final_alb_community_barplot, width = 400, height = 300,
-       units = 'mm', dpi = 300)
+# ggsave('final_alb_community_barplot.tiff', device = 'tiff',
+#        final_alb_community_barplot, width = 400, height = 300,
+#        units = 'mm', dpi = 300)
 
 final_sch_community_barplot <- ggpubr::ggarrange(sch_ord_bark_plots, sch_ord_soil_plots,
                                                  ncol = 1, nrow = 2,
                                                  legend = "bottom", common.legend = TRUE)
 final_sch_community_barplot
 
-ggsave('final_sch_community_barplot.tiff', device = 'tiff',
-       final_sch_community_barplot, width = 400, height = 300,
-       units = 'mm', dpi = 300)
+# #ggsave('final_sch_community_barplot.tiff', device = 'tiff',
+#        final_sch_community_barplot, width = 400, height = 300,
+#        units = 'mm', dpi = 300)
 
 
 combined_community_barplot <- ggpubr::ggarrange(final_alb_community_barplot,
@@ -1036,9 +1079,9 @@ combined_community_barplot <- ggpubr::ggarrange(final_alb_community_barplot,
                                                 ncol = 1, nrow = 2)
 combined_community_barplot
 
-ggsave('combined_community_barplots.tiff', device = 'tiff',
-       combined_community_barplot, width = 300, height = 600,
-       units = 'mm', dpi = 300)
+# #ggsave('combined_community_barplots.tiff', device = 'tiff',
+#        combined_community_barplot, width = 300, height = 600,
+#        units = 'mm', dpi = 300)
 
 #################################################################
 ##                          Section 9                          ##
@@ -1096,7 +1139,7 @@ fun.mb_A <- SpiecEasi::adj2igraph(SpiecEasi::getRefit(se_raw_abundfilt_A),
 fun.mb_A_gephi <- rgexf::igraph.to.gexf(fun.mb_A)
 
 # Write the object. 
-rgexf::write.gexf(fun.mb_A_gephi, output = here::here("alb_network.gexf"))
+#rgexf::write.gexf(fun.mb_A_gephi, output = here::here("alb_network.gexf"))
 
 # Get the figures and modules from Gephi. See the paper for details on the 
 # algorithms we used inside Gephi. 
@@ -1170,7 +1213,7 @@ fun.mb_S <- SpiecEasi::adj2igraph(SpiecEasi::getRefit(se_raw_abundfilt_S),
 fun.mb_S_gephi <- rgexf::igraph.to.gexf(fun.mb_S)
 
 # Write the object. 
-rgexf::write.gexf(fun.mb_S_gephi, output = here::here("sch_network.gexf"))
+#rgexf::write.gexf(fun.mb_S_gephi, output = here::here("sch_network.gexf"))
 
 # Get the figures and modules from Gephi. See the paper for details on the 
 # algorithms we used inside Gephi. 
@@ -1239,9 +1282,9 @@ alb_rel_abund_modules_barplot <- phyloseq::plot_bar(physeq_alb_modules, x = "mod
   ylim(0, 30) 
 alb_rel_abund_modules_barplot
 
-ggpubr::ggexport(alb_rel_abund_modules_barplot, filename = "alb_modules_plot.tiff",
-                 width = 900, height = 1800, 
-                 res = 300)
+# ggpubr::ggexport(alb_rel_abund_modules_barplot, filename = "alb_modules_plot.tiff",
+#                  width = 900, height = 1800, 
+#                  res = 300)
 
 ################Schorfheide-Chorin#######################
 
@@ -1289,9 +1332,9 @@ sch_rel_abund_modules_barplot <- plot_bar(physeq_sch_modules, x="modularity_clas
   ylim(0, 18)
 sch_rel_abund_modules_barplot
 
-ggpubr::ggexport(sch_rel_abund_modules_barplot, filename = "sch_modules_plot.tiff",
-                 width = 900, height = 1800, 
-                 res = 300)
+# #ggpubr::ggexport(sch_rel_abund_modules_barplot, filename = "sch_modules_plot.tiff",
+#                  width = 900, height = 1800, 
+#                  res = 300)
 
 #################################################################
 ##                          Section 10                         ##
@@ -1469,6 +1512,36 @@ soil_tree_overlap
 bark_tree_overlap <- MicEco::ps_venn(physeq_bark, group = "dominant_tree", fraction = 0,
                                      weight = T, relative = T, plot = T)
 bark_tree_overlap
+
+# Relative abundance of the top 4 order of lichenized fungi.
+# Caliciales + Lecanorales + Trapeliales + Verrucariales
+
+#Schorfheide-Chorin
+otu_top25_sch <- data.frame(phyloseq::otu_table(phyloseq::subset_samples(phy_sch_ord_top25_named_plot, substrate == "bark"))) 
+
+top_lichen_rel_abund_sch <- base::sort(base::rowSums(otu_top25_sch))
+
+top_lichen_rel_abund_sch["Lecanorales"] 
+
+# Swabian Alb
+otu_top25_alb <- data.frame(phyloseq::otu_table(phyloseq::subset_samples(phy_alb_ord_top25_named_plot, substrate == "bark"))) 
+
+top_lichen_rel_abund_alb <- base::sort(base::rowSums(otu_top25_alb))
+
+top_lichen_rel_abund_alb["Lecanorales"] + top_lichen_rel_abund_alb["Caliciales"] + 
+  top_lichen_rel_abund_alb["Trapeliales"] + top_lichen_rel_abund_alb["Verrucariales"]
+
+
+# Relative abundance of ASVs not assigned at order level
+# Swabian Alb
+top_lichen_rel_abund_alb["Unknown Dothideomycetes (Class)"] + 
+  top_lichen_rel_abund_alb["Unknown Ascomycota (Phylum)"] + 
+  top_lichen_rel_abund_alb["Unknown Fungi (Kingdom)"] 
+
+# Schorfheide-Chorin
+top_lichen_rel_abund_sch["Unknown Dothideomycetes (Class)"] + 
+  top_lichen_rel_abund_sch["Unknown Ascomycota (Phylum)"] + 
+  top_lichen_rel_abund_sch["Unknown Rozellomycota (Phylum)"] 
 
 #################################################################
 ##                          Section 11                         ##
@@ -2049,15 +2122,91 @@ substrate_differences <- ggpubr::ggarrange(asv_num_substrate_barplot, rel_abund_
                                       legend = "bottom", common.legend = T)
 substrate_differences
 
-ggsave('substrate_differences.tiff', device = 'tiff',
-       substrate_differences, width = 400, height = 240,
-       units = 'mm', dpi = 300)
+# #ggsave('substrate_differences.tiff', device = 'tiff',
+#        substrate_differences, width = 400, height = 240,
+#        units = 'mm', dpi = 300)
 
 tree_differences <- ggpubr::ggarrange(asv_num_tree_barplot, rel_abund_tree_barplot,
                                            ncol = 2, nrow = 1,
                                            legend = "bottom", common.legend = T)
 tree_differences
 
-ggsave('tree_differences.tiff', device = 'tiff',
-       tree_differences, width = 400, height = 240,
-       units = 'mm', dpi = 300)
+# #ggsave('tree_differences.tiff', device = 'tiff',
+#        tree_differences, width = 400, height = 240,
+#        units = 'mm', dpi = 300)
+
+
+
+
+# Percentage of reads not assigned at order level (relative abundance)
+
+#Schorfheide Chorin
+bark_top25_sch <- phyloseq::subset_samples(phy_sch_ord_top25_named, substrate == "bark")
+# Calculate the total number of reads
+total_reads_bark_sch <- sum(rowSums(otu_table(bark_top25_sch)))
+total_reads_bark_sch
+
+# Calculate the total number of reads for the lecanoromycetes  
+unknown_sch <- c("Unknown Dothideomycetes (Class)", "Unknown Rozellomycota (Phylum)", 
+             "Unknown Ascomycota (Phylum)")
+
+total_reads_unknown_bark_sch <- sum(rowSums(
+  otu_table(phyloseq::subset_taxa(bark_top25_sch, Order %in% unknown_sch))))
+total_reads_unknown_bark_sch
+
+# Divide the two total to get the relative abundance
+rel_abund_unknown_bark_sch <- total_reads_unknown_bark_sch / total_reads_bark * 100
+rel_abund_unknown_bark_sch
+
+#Swabian alb
+
+bark_top25_alb <- phyloseq::subset_samples(phy_alb_ord_top25_named, substrate == "bark")
+# Calculate the total number of reads
+total_reads_bark_alb <- sum(rowSums(otu_table(bark_top25_alb)))
+total_reads_bark_alb
+
+# Calculate the total number of reads for the lecanoromycetes  
+unknown_alb <- c("Unknown Dothideomycetes (Class)", "Unknown Fungi (Kingdom)", 
+                 "Unknown Ascomycota (Phylum)")
+
+total_reads_unknown_bark_alb <- sum(rowSums(
+  otu_table(phyloseq::subset_taxa(bark_top25_alb, Order %in% unknown_alb))))
+total_reads_unknown_bark_alb
+
+# Divide the two total to get the relative abundance
+rel_abund_unknown_bark_alb <- total_reads_unknown_bark_alb / total_reads_bark * 100
+rel_abund_unknown_bark_alb
+
+
+# Lichenized
+bark_top25_sch <- phyloseq::subset_samples(phy_sch_ord_top25_named, substrate == "bark")
+# Calculate the total number of reads
+total_reads_bark_sch <- sum(rowSums(otu_table(bark_top25_sch)))
+total_reads_bark_sch
+
+# Calculate the total number of reads for the lecanoromycetes  
+total_reads_lichen_bark_sch <- sum(rowSums(
+  otu_table(phyloseq::subset_taxa(bark_top25_sch, Order == "Lecanorales"))))
+total_reads_lichen_bark_sch
+
+# Divide the two total to get the relative abundance
+rel_abund_lichen_bark_sch <- total_reads_lichen_bark_sch / total_reads_bark_sch * 100
+rel_abund_lichen_bark_sch
+
+# Lichenized
+bark_top25_alb <- phyloseq::subset_samples(phy_alb_ord_top25_named, substrate == "bark")
+# Calculate the total number of reads
+total_reads_bark_alb <- sum(rowSums(otu_table(bark_top25_alb)))
+total_reads_bark_alb
+
+lichen_alb <- c("Lecanorales", "Caliciales", 
+                 "Trapeliales", "Verrucariales")
+
+# Calculate the total number of reads for the lecanoromycetes  
+total_reads_lichen_bark_alb <- sum(rowSums(
+  otu_table(phyloseq::subset_taxa(bark_top25_alb, Order %in% lichen_alb))))
+total_reads_lichen_bark_alb
+
+# Divide the two total to get the relative abundance
+rel_abund_lichen_bark_alb <- total_reads_lichen_bark_alb / total_reads_bark_alb * 100
+rel_abund_lichen_bark_alb
