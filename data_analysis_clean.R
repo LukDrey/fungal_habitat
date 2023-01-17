@@ -1513,35 +1513,6 @@ bark_tree_overlap <- MicEco::ps_venn(physeq_bark, group = "dominant_tree", fract
                                      weight = T, relative = T, plot = T)
 bark_tree_overlap
 
-# Relative abundance of the top 4 order of lichenized fungi.
-# Caliciales + Lecanorales + Trapeliales + Verrucariales
-
-#Schorfheide-Chorin
-otu_top25_sch <- data.frame(phyloseq::otu_table(phyloseq::subset_samples(phy_sch_ord_top25_named_plot, substrate == "bark"))) 
-
-top_lichen_rel_abund_sch <- base::sort(base::rowSums(otu_top25_sch))
-
-top_lichen_rel_abund_sch["Lecanorales"] 
-
-# Swabian Alb
-otu_top25_alb <- data.frame(phyloseq::otu_table(phyloseq::subset_samples(phy_alb_ord_top25_named_plot, substrate == "bark"))) 
-
-top_lichen_rel_abund_alb <- base::sort(base::rowSums(otu_top25_alb))
-
-top_lichen_rel_abund_alb["Lecanorales"] + top_lichen_rel_abund_alb["Caliciales"] + 
-  top_lichen_rel_abund_alb["Trapeliales"] + top_lichen_rel_abund_alb["Verrucariales"]
-
-
-# Relative abundance of ASVs not assigned at order level
-# Swabian Alb
-top_lichen_rel_abund_alb["Unknown Dothideomycetes (Class)"] + 
-  top_lichen_rel_abund_alb["Unknown Ascomycota (Phylum)"] + 
-  top_lichen_rel_abund_alb["Unknown Fungi (Kingdom)"] 
-
-# Schorfheide-Chorin
-top_lichen_rel_abund_sch["Unknown Dothideomycetes (Class)"] + 
-  top_lichen_rel_abund_sch["Unknown Ascomycota (Phylum)"] + 
-  top_lichen_rel_abund_sch["Unknown Rozellomycota (Phylum)"] 
 
 #################################################################
 ##                          Section 11                         ##
@@ -1813,7 +1784,7 @@ asv_num_sch_pinus_bark <- phyloseq::ntaxa(physeq_sch_bark_pinus)
 sch_tree_df_bark <- base::data.frame(exploratory = "Schorfheide- Chorin \n bark",
                                      value = c(length(sch_tree_list_bark$Fagus_sylvatica), 
                                                length(sch_tree_list_bark$Pinus_sylvestris),
-                                               length(sch_tree_list_bark$Fagus_sylvatica__Picea_abies),
+                                               length(sch_tree_list_bark$Fagus_sylvatica__Pinus_sylvestris),
                                                asv_num_sch_fagus_bark,
                                                asv_num_sch_pinus_bark),
                                      variable = c("Fagus only",
@@ -1835,7 +1806,7 @@ asv_num_sch_pinus_soil <- phyloseq::ntaxa(physeq_sch_soil_pinus)
 sch_tree_df_soil <- base::data.frame(exploratory = "Schorfheide- Chorin \n soil",
                                      value = c(length(sch_tree_list_soil$Fagus_sylvatica), 
                                                length(sch_tree_list_soil$Pinus_sylvestris),
-                                               length(sch_tree_list_soil$Fagus_sylvatica__Picea_abies),
+                                               length(sch_tree_list_soil$Fagus_sylvatica__Pinus_sylvestris),
                                                asv_num_sch_fagus_soil,
                                                asv_num_sch_pinus_soil),
                                      variable = c("Fagus only",
@@ -2122,16 +2093,16 @@ substrate_differences <- ggpubr::ggarrange(asv_num_substrate_barplot, rel_abund_
                                       legend = "bottom", common.legend = T)
 substrate_differences
 
-# #ggsave('substrate_differences.tiff', device = 'tiff',
-#        substrate_differences, width = 400, height = 240,
-#        units = 'mm', dpi = 300)
+# ggsave('substrate_differences.tiff', device = 'tiff',
+#         substrate_differences, width = 400, height = 240,
+#         units = 'mm', dpi = 300)
 
 tree_differences <- ggpubr::ggarrange(asv_num_tree_barplot, rel_abund_tree_barplot,
                                            ncol = 2, nrow = 1,
                                            legend = "bottom", common.legend = T)
 tree_differences
 
-# #ggsave('tree_differences.tiff', device = 'tiff',
+# ggsave('tree_differences.tiff', device = 'tiff',
 #        tree_differences, width = 400, height = 240,
 #        units = 'mm', dpi = 300)
 
@@ -2155,7 +2126,7 @@ total_reads_unknown_bark_sch <- sum(rowSums(
 total_reads_unknown_bark_sch
 
 # Divide the two total to get the relative abundance
-rel_abund_unknown_bark_sch <- total_reads_unknown_bark_sch / total_reads_bark * 100
+rel_abund_unknown_bark_sch <- total_reads_unknown_bark_sch / total_reads_bark_sch * 100
 rel_abund_unknown_bark_sch
 
 #Swabian alb
@@ -2210,3 +2181,63 @@ total_reads_lichen_bark_alb
 # Divide the two total to get the relative abundance
 rel_abund_lichen_bark_alb <- total_reads_lichen_bark_alb / total_reads_bark_alb * 100
 rel_abund_lichen_bark_alb
+
+
+# Relative abundance top orders. 
+
+#Schorfheide-Chorin
+otu_top_sch_bark <- data.frame(phyloseq::otu_table(phyloseq::subset_samples(phy_sch_ord_top25_named_plot, substrate == "bark"))) 
+
+top_rel_abund_sch_bark <- base::sort(base::rowSums(otu_top_sch_bark))
+
+otu_top_sch_soil <- data.frame(phyloseq::otu_table(phyloseq::subset_samples(phy_sch_ord_top25_named_plot, substrate == "soil"))) 
+
+top_rel_abund_sch_soil <- base::sort(base::rowSums(otu_top_sch_soil))
+
+#Swabian Alb
+otu_top_alb_bark <- data.frame(phyloseq::otu_table(phyloseq::subset_samples(phy_alb_ord_top25_named_plot, substrate == "bark"))) 
+
+top_rel_abund_alb_bark <- base::sort(base::rowSums(otu_top_alb_bark))
+
+otu_top_alb_soil <- data.frame(phyloseq::otu_table(phyloseq::subset_samples(phy_alb_ord_top25_named_plot, substrate == "soil"))) 
+
+top_rel_abund_alb_soil <- base::sort(base::rowSums(otu_top_alb_soil))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Calculate the total number of reads
+total_reads_bark_alb <- sum(rowSums(otu_table(physeq_alb_soil)))
+total_reads_bark_alb
+
+
+
+total_reads_unknown_bark_alb <- sum(rowSums(
+  otu_table(phyloseq::subset_taxa(physeq_alb_soil, is.na(Order)))))
+total_reads_unknown_bark_alb
+
+total_reads_unknown_bark_alb/total_reads_bark_alb * 100
+
+
+
+# Calculate the total number of reads
+total_reads_bark_sch <- sum(rowSums(otu_table(physeq_sch_soil)))
+total_reads_bark_sch
+
+
+
+total_reads_unknown_bark_sch <- sum(rowSums(
+  otu_table(phyloseq::subset_taxa(physeq_sch_soil, is.na(Order)))))
+total_reads_unknown_bark_sch
+
+total_reads_unknown_bark_sch/total_reads_bark_sch * 100
