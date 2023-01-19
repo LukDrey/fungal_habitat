@@ -232,9 +232,9 @@ combined_rare_curves <- ggpubr::ggarrange(rare_alb, rare_sch,
                                           ncol = 2, nrow = 1)
 combined_rare_curves
 
-# #ggsave('combined_rare_curves.tiff', device = 'tiff',
+# ggsave('combined_rare_curves.tiff', device = 'tiff',
 #        combined_rare_curves, width = 400, height = 240,
-#        units = 'mm', dpi = 300)  
+#        units = 'mm', dpi = 300)
 # #################################################################
 ##                          Section 4                          ##
 ##                   Alpha diversity analyses                  ##
@@ -382,10 +382,9 @@ ordination_final <- ggpubr::ggarrange(ordination_alb, ordination_sch,
                                       legend = "right", legend.grob = ordination_legend)
 ordination_final
 
-# #ggsave('ordination_final.tiff', device = 'tiff',
-#        ordination_final, width = 400, height = 240,
-#        units = 'mm', dpi = 300)
-
+# ggsave('substrate_differences.tiff', device = 'tiff',
+#         substrate_differences, width = 400, height = 240,
+#         units = 'mm', dpi = 300)
 #########################PERMANOVA and Betadisper############################
 # Swabian Alb
 
@@ -621,7 +620,7 @@ variance_barplot <- ggpubr::ggbarplot(variance_full, x = "exploratory", y = "var
                  axis.ticks.y = element_blank()) 
 variance_barplot
 
-# #ggsave('variance_barplot.tiff', device = 'tiff',
+# ggsave('variance_barplot.tiff', device = 'tiff',
 #        variance_barplot, width = 400, height = 240,
 #        units = 'mm', dpi = 300)
 
@@ -786,7 +785,7 @@ final_venn_diagrams <- ggpubr::ggarrange(venn_bark_alb, venn_soil_alb,
                                          labels = "AUTO")
 final_venn_diagrams
 
-# #ggsave('final_venn_diagrams.tiff', device = 'tiff',
+# ggsave('final_venn_diagrams.tiff', device = 'tiff',
 #        final_venn_diagrams, width = 400, height = 600,
 #        units = 'mm', dpi = 300)
 
@@ -1069,7 +1068,7 @@ final_sch_community_barplot <- ggpubr::ggarrange(sch_ord_bark_plots, sch_ord_soi
                                                  legend = "bottom", common.legend = TRUE)
 final_sch_community_barplot
 
-# #ggsave('final_sch_community_barplot.tiff', device = 'tiff',
+# ggsave('final_sch_community_barplot.tiff', device = 'tiff',
 #        final_sch_community_barplot, width = 400, height = 300,
 #        units = 'mm', dpi = 300)
 
@@ -1079,7 +1078,7 @@ combined_community_barplot <- ggpubr::ggarrange(final_alb_community_barplot,
                                                 ncol = 1, nrow = 2)
 combined_community_barplot
 
-# #ggsave('combined_community_barplots.tiff', device = 'tiff',
+# ggsave('combined_community_barplots.tiff', device = 'tiff',
 #        combined_community_barplot, width = 300, height = 600,
 #        units = 'mm', dpi = 300)
 
@@ -2102,9 +2101,9 @@ tree_differences <- ggpubr::ggarrange(asv_num_tree_barplot, rel_abund_tree_barpl
                                            legend = "bottom", common.legend = T)
 tree_differences
 
-# ggsave('tree_differences.tiff', device = 'tiff',
-#        tree_differences, width = 400, height = 240,
-#        units = 'mm', dpi = 300)
+ggsave('tree_differences.tiff', device = 'tiff',
+       tree_differences, width = 400, height = 240,
+       units = 'mm', dpi = 300)
 
 
 
@@ -2241,3 +2240,4 @@ total_reads_unknown_bark_sch <- sum(rowSums(
 total_reads_unknown_bark_sch
 
 total_reads_unknown_bark_sch/total_reads_bark_sch * 100
+
