@@ -214,7 +214,10 @@ phyloseq::sample_data(physeq_alb_curve) <- phyloseq::sample_data(physeq_alb) %>%
   dplyr::mutate(tree_substrate = base::paste(dominant_tree, substrate, sep = "-"))
 
 # Create rarefaction curve and color the lines by substrate (bark/soil) and host tree species. 
-rare_alb <- ranacapa::ggrare(physeq_alb_curve, step = 50, color = "tree_substrate", se = FALSE)
+rare_alb <- ranacapa::ggrare(physeq_alb_curve, step = 50, color = "tree_substrate", se = FALSE) +
+  theme(legend.text = element_text(size = 4),
+        legend.title = element_blank(),
+        legend.key.size = unit(0.5, "cm"))
 
 ################Schorfheide###########################
 
@@ -226,16 +229,20 @@ phyloseq::sample_data(physeq_sch_curve) <- phyloseq::sample_data(physeq_sch) %>%
 
 # Create rarefaction curve and color the lines by substrate (bark/soil) and host tree species. 
 rare_sch <- ranacapa::ggrare(physeq_sch_curve, step = 50,
-                             color = "tree_substrate", se = FALSE) 
+                             color = "tree_substrate", se = FALSE) +
+  theme(legend.text = element_text(size = 4),
+        legend.title = element_blank(),
+        legend.key.size = unit(0.5, "cm"))
 
 combined_rare_curves <- ggpubr::ggarrange(rare_alb, rare_sch,
                                           ncol = 2, nrow = 1)
 combined_rare_curves
 
-# ggsave('combined_rare_curves.tiff', device = 'tiff',
-#        combined_rare_curves, width = 400, height = 240,
-#        units = 'mm', dpi = 300)
-# #################################################################
+ggsave('combined_rare_curves.jpg', device = 'jpeg',
+       combined_rare_curves, width = 180, height = 90,
+       units = 'mm', dpi = 300)
+
+#################################################################
 ##                          Section 4                          ##
 ##                   Alpha diversity analyses                  ##
 #################################################################
@@ -363,8 +370,8 @@ ordination_full <- phyloseq::plot_ordination(full_ordination_ps, nmds_full,
   ggplot2::stat_ellipse(ggplot2::aes(group = dominant_tree), linetype = 2) +
   ggplot2::scale_colour_manual(values = c("green", "darkgreen", "darkolivegreen4"), name = "tree species",
                                labels = c("Fagus sylvatica","Picea abies", "Pinus sylvestris")) +
-  ggplot2::theme(legend.text = ggplot2::element_text(face = "italic", size = 15),
-        legend.title = ggplot2::element_text(size = 15, face = "bold"),
+  ggplot2::theme(legend.text = ggplot2::element_text(face = "italic", size = 9),
+        legend.title = ggplot2::element_text(size = 8, face = "bold"),
         legend.position = "right",
         legend.direction = "vertical",
         legend.spacing = ggplot2::unit(2,"cm"),
@@ -382,9 +389,9 @@ ordination_final <- ggpubr::ggarrange(ordination_alb, ordination_sch,
                                       legend = "right", legend.grob = ordination_legend)
 ordination_final
 
-# ggsave('substrate_differences.tiff', device = 'tiff',
-#         substrate_differences, width = 400, height = 240,
-#         units = 'mm', dpi = 300)
+ggsave('ordination_final.jpeg', device = 'jpeg',
+       ordination_final, width = 180, height = 150,
+        units = 'mm', dpi = 300)
 #########################PERMANOVA and Betadisper############################
 # Swabian Alb
 
@@ -614,15 +621,15 @@ variance_barplot <- ggpubr::ggbarplot(variance_full, x = "exploratory", y = "var
   ggplot2::ylab("Explained Variance") + 
   ggplot2::theme(text = element_text(size = 15),
                  legend.title = element_blank(),
-                 legend.position = c(1.05,0.5),
+                 legend.position = c(1.2,0.5),
                  axis.title.y = element_blank(),
                  axis.line.y = element_blank(), 
                  axis.ticks.y = element_blank()) 
 variance_barplot
 
-# ggsave('variance_barplot.tiff', device = 'tiff',
-#        variance_barplot, width = 400, height = 240,
-#        units = 'mm', dpi = 300)
+ggsave('variance_barplot.jpeg', device = 'jpeg',
+       variance_barplot, width = 180, height = 140,
+       units = 'mm', dpi = 300)
 
 #################################################################
 ##                          Section 7                          ##
@@ -645,9 +652,9 @@ venn_soil_alb <- MicEco::ps_venn(physeq_alb_soil, group = "dominant_tree",
                                  fraction = 0, weight = F, relative = TRUE, plot = TRUE,
                                  fill = c("green","mediumseagreen"),
                                  labels = list(labels =c("Fagus sylvatica", "Picea abies"),
-                                               cex=1.6, font=list(face=3)),
+                                               cex=0.9, font=list(face=3)),
                                  quantities = list(type=c("percent"), 
-                                                   labels = c("\n19% (3153)","\n9% (1025)","\n71% (1199)"), cex=1.6))
+                                                   labels = c("\n19% (3153)","\n9% (1025)","\n71% (1199)"), cex=0.9))
 venn_soil_alb
 
 #Check the absolute number of tree per category.
@@ -661,9 +668,9 @@ venn_bark_alb <- MicEco::ps_venn(physeq_alb_bark, group = "dominant_tree",
                                  fraction = 0, weight = F, relative = F, plot = TRUE,
                                  fill = c("green","mediumseagreen"),
                                  labels = list(labels =c("Fagus sylvatica", "Picea abies"),
-                                               cex=1.6,font=list(face=3)),
+                                               cex=0.9,font=list(face=3)),
                                  quantities = list(type=c("percent"),
-                                                   labels = c("\n13% (602)","\n9% (299)","\n78% (228)"), cex=1.6))
+                                                   labels = c("\n13% (602)","\n9% (299)","\n78% (228)"), cex=0.9))
 venn_bark_alb
 
 ###
@@ -681,9 +688,9 @@ venn_fagus_alb <- MicEco::ps_venn(physeq_alb_fagus, group = "substrate",
                                   fraction = 0, weight = F, relative = F, plot = TRUE,
                                   fill = c("green","mediumseagreen"),
                                   labels = list(labels =c("Fagus bark", "Fagus soil"),
-                                                cex=1.6,font=list(face=3)),
+                                                cex=0.9,font=list(face=3)),
                                   quantities = list(type=c("percent"),
-                                                    labels = c("\n15% (520)","\n29% (4042)","\n56% (310)"), cex=1.6))
+                                                    labels = c("\n15% (520)","\n29% (4042)","\n56% (310)"), cex=0.9))
 venn_fagus_alb
 
 # Check the absolute number of tree per category.
@@ -697,9 +704,9 @@ venn_picea_alb <- MicEco::ps_venn(physeq_alb_picea, group = "substrate",
                                   fraction = 0, weight = F, relative = F, plot = TRUE,
                                   fill = c("green","mediumseagreen"),
                                   labels = list(labels =c("Picea bark", "Picea soil"),
-                                                cex=1.6,font=list(face=3)),
+                                                cex=0.9,font=list(face=3)),
                                   quantities = list(type=c("percent"),
-                                                    labels = c("\n28% (378)","\n37% (2075)","\n35% (149)"), cex=1.6))
+                                                    labels = c("\n28% (378)","\n37% (2075)","\n35% (149)"), cex=0.9))
 venn_picea_alb
 
 #####################Schorfheide#######################
@@ -718,9 +725,9 @@ venn_soil_sch <- MicEco::ps_venn(physeq_sch_soil, group = "dominant_tree",
                                  fraction = 0, weight = F, relative = TRUE, plot = TRUE,
                                  fill = c("green","mediumseagreen"),
                                  labels = list(labels =c("Fagus sylvatica", "Pinus sylvestris"),
-                                               cex=1.6, font=list(face=3)),
+                                               cex=0.9, font=list(face=3)),
                                  quantities = list(type=c("percent"), 
-                                                   labels = c("\n8% (1282)","\n4% (734)","\n88% (838)"), cex=1.6))
+                                                   labels = c("\n8% (1282)","\n4% (734)","\n88% (838)"), cex=0.9))
 venn_soil_sch
 
 #Check the absolute number of tree per category.
@@ -734,9 +741,9 @@ venn_bark_sch <- MicEco::ps_venn(physeq_sch_bark, group = "dominant_tree",
                                  fraction = 0, weight = F, relative = F, plot = TRUE,
                                  fill = c("green","mediumseagreen"),
                                  labels = list(labels =c("Fagus sylvatica", "Pinus sylvestris"),
-                                               cex=1.6,font=list(face=3)),
+                                               cex=0.9,font=list(face=3)),
                                  quantities = list(type=c("percent"),
-                                                   labels = c("\n4% (411)","\n8% (198)","\n88% (162)"), cex=1.6))
+                                                   labels = c("\n4% (411)","\n8% (198)","\n88% (162)"), cex=0.9))
 venn_bark_sch
 
 ###
@@ -754,9 +761,9 @@ venn_fagus_sch <- MicEco::ps_venn(physeq_sch_fagus, group = "substrate",
                                   fraction = 0, weight = F, relative = F, plot = TRUE,
                                   fill = c("green","mediumseagreen"),
                                   labels = list(labels =c("Fagus bark", "Fagus soil"),
-                                                cex=1.6,font=list(face=3)),
+                                                cex=0.9,font=list(face=3)),
                                   quantities = list(type=c("percent"),
-                                                    labels = c("\n10% (379)","\n24% (1926)","\n66% (194)"), cex=1.6))
+                                                    labels = c("\n10% (379)","\n24% (1926)","\n66% (194)"), cex=0.9))
 venn_fagus_sch
 
 # Check the absolute number of tree per category.
@@ -770,9 +777,9 @@ venn_pinus_sch <- MicEco::ps_venn(physeq_sch_pinus, group = "substrate",
                                   fraction = 0, weight = F, relative = F, plot = TRUE,
                                   fill = c("green","mediumseagreen"),
                                   labels = list(labels =c("Pinus bark", "Pinus soil"),
-                                                cex=1.6,font=list(face=3)),
+                                                cex=0.9,font=list(face=3)),
                                   quantities = list(type=c("percent"),
-                                                    labels = c("\n22% (261)","\n29% (1473)","\n49% (99)"), cex=1.6))
+                                                    labels = c("\n22% (261)","\n29% (1473)","\n49% (99)"), cex=0.9))
 venn_pinus_sch
 
 # Create the final figure.
@@ -785,9 +792,9 @@ final_venn_diagrams <- ggpubr::ggarrange(venn_bark_alb, venn_soil_alb,
                                          labels = "AUTO")
 final_venn_diagrams
 
-# ggsave('final_venn_diagrams.tiff', device = 'tiff',
-#        final_venn_diagrams, width = 400, height = 600,
-#        units = 'mm', dpi = 300)
+ggsave('final_venn_diagrams.jpeg', device = 'jpeg',
+       final_venn_diagrams, width = 180, height = 287,
+       units = 'mm', dpi = 300)
 
 #################################################################
 ##                          Section 8                          ##
@@ -966,7 +973,7 @@ alb_ord_soil_plots
 alb_ord_bark_plots <- phyloseq::subset_samples(phy_alb_ord_top25_named_plot, substrate == "bark") %>%
   microbiome::plot_composition(group_by =  'tree_substrate', otu.sort = alb_cols$order) +
   scale_fill_alb() +
-  guides(fill = guide_legend(title.position = 'top', ncol = 10)) +
+  guides(fill = guide_legend(title = 'Order',title.position = 'top', ncol = 10)) +
   theme(panel.grid.major.x = element_blank(), 
         panel.grid.major.y = element_blank(),
         panel.grid.minor = element_blank(),
@@ -977,19 +984,19 @@ alb_ord_bark_plots <- phyloseq::subset_samples(phy_alb_ord_top25_named_plot, sub
         axis.text.y =  element_text(colour = "black", size = 10),
         axis.title.x = element_text(colour = "black", size = 10),
         axis.title.y = element_text(colour = "black", size = 10),
-        legend.position = 'bottom', 
+        legend.position = 'bottom',
+        text = element_text(colour = 'black', size = 20), 
         plot.title = element_text(vjust = -4, hjust = 0.03), 
-        legend.text = element_text(colour = 'black', size = 7),
-        legend.title =  element_text(size = 10),
-        legend.key.size = unit(2.5, 'mm'),
+        legend.text = element_text(colour = 'black', size = 5),
+        legend.title =  element_text("Order",size = 8),
+        legend.key.size = unit(1, 'mm'),
         axis.ticks.length.x = unit(-0.2, "cm"), 
         legend.box.spacing = unit(-4, 'mm'),
         legend.background = element_rect(fill = 'transparent'),
-        text = element_text(colour = 'black', size = 20),
         strip.text = element_text(face = "italic")) + 
   xlab('Sample') +
   ylab('Relative Abundance') + 
-  labs(title = 'Swabian Alb', subtitle = "(A)")
+  labs(subtitle = "(A) Swabian Alb")
 alb_ord_bark_plots
 
 ############## Schorfheide-Chorin ###############
@@ -1026,7 +1033,7 @@ sch_ord_soil_plots
 sch_ord_bark_plots <- phyloseq::subset_samples(phy_sch_ord_top25_named_plot, substrate == "bark") %>% 
   microbiome::plot_composition(group_by =  'tree_substrate', otu.sort = sch_cols$order) +
   scale_fill_sch() +
-  guides(fill = guide_legend(title.position = 'top', ncol = 10)) +
+  guides(fill = guide_legend(title = 'Order',title.position = 'top', ncol = 10)) +
   theme(panel.grid.major.x = element_blank(), 
         panel.grid.major.y = element_blank(),
         panel.grid.minor = element_blank(),
@@ -1037,19 +1044,19 @@ sch_ord_bark_plots <- phyloseq::subset_samples(phy_sch_ord_top25_named_plot, sub
         axis.text.y =  element_text(colour = "black", size = 10),
         axis.title.x = element_text(colour = "black", size = 10),
         axis.title.y = element_text(colour = "black", size = 10),
-        legend.position = 'bottom', 
+        legend.position = 'bottom',
+        text = element_text(colour = 'black', size = 20), 
         plot.title = element_text(vjust = -4, hjust = 0.03), 
-        legend.text = element_text(colour = 'black', size = 7),
-        legend.title =  element_text(size = 10),
-        legend.key.size = unit(2.5, 'mm'),
+        legend.text = element_text(colour = 'black', size = 5),
+        legend.title =  element_text("Order",size = 8),
+        legend.key.size = unit(1, 'mm'),
         axis.ticks.length.x = unit(-0.2, "cm"), 
         legend.box.spacing = unit(-4, 'mm'),
         legend.background = element_rect(fill = 'transparent'),
-        text = element_text(colour = 'black', size = 20),
         strip.text = element_text(face = "italic")) + 
   xlab('Sample') +
   ylab('Relative Abundance') + 
-  labs(title = 'Schorfheide-Chorin', subtitle = "(A)") 
+  labs(subtitle = "(A) Schorfheide-Chorin") 
 sch_ord_bark_plots
 
 ######## Create final arranged plot #######
@@ -1059,18 +1066,18 @@ final_alb_community_barplot <- ggpubr::ggarrange(alb_ord_bark_plots, alb_ord_soi
                                                  legend = "bottom", common.legend = TRUE)
 final_alb_community_barplot
 
-# ggsave('final_alb_community_barplot.tiff', device = 'tiff',
-#        final_alb_community_barplot, width = 400, height = 300,
-#        units = 'mm', dpi = 300)
+ggsave('final_alb_community_barplot.jpeg', device = 'jpeg',
+       final_alb_community_barplot, width = 180, height = 140,
+       units = 'mm', dpi = 300)
 
 final_sch_community_barplot <- ggpubr::ggarrange(sch_ord_bark_plots, sch_ord_soil_plots,
                                                  ncol = 1, nrow = 2,
                                                  legend = "bottom", common.legend = TRUE)
 final_sch_community_barplot
 
-# ggsave('final_sch_community_barplot.tiff', device = 'tiff',
-#        final_sch_community_barplot, width = 400, height = 300,
-#        units = 'mm', dpi = 300)
+ggsave('final_sch_community_barplot.jpeg', device = 'jpeg',
+       final_sch_community_barplot, width = 180, height = 140,
+       units = 'mm', dpi = 300)
 
 
 combined_community_barplot <- ggpubr::ggarrange(final_alb_community_barplot,
@@ -1078,7 +1085,7 @@ combined_community_barplot <- ggpubr::ggarrange(final_alb_community_barplot,
                                                 ncol = 1, nrow = 2)
 combined_community_barplot
 
-# ggsave('combined_community_barplots.tiff', device = 'tiff',
+# ggsave('combined_community_barplots.jpeg', device = 'jpeg',
 #        combined_community_barplot, width = 300, height = 600,
 #        units = 'mm', dpi = 300)
 
@@ -1281,7 +1288,7 @@ alb_rel_abund_modules_barplot <- phyloseq::plot_bar(physeq_alb_modules, x = "mod
   ylim(0, 30) 
 alb_rel_abund_modules_barplot
 
-# ggpubr::ggexport(alb_rel_abund_modules_barplot, filename = "alb_modules_plot.tiff",
+# ggpubr::ggexport(alb_rel_abund_modules_barplot, filename = "alb_modules_plot.jpeg",
 #                  width = 900, height = 1800, 
 #                  res = 300)
 
@@ -1331,7 +1338,7 @@ sch_rel_abund_modules_barplot <- plot_bar(physeq_sch_modules, x="modularity_clas
   ylim(0, 18)
 sch_rel_abund_modules_barplot
 
-# #ggpubr::ggexport(sch_rel_abund_modules_barplot, filename = "sch_modules_plot.tiff",
+# #ggpubr::ggexport(sch_rel_abund_modules_barplot, filename = "sch_modules_plot.jpeg",
 #                  width = 900, height = 1800, 
 #                  res = 300)
 
@@ -1597,7 +1604,8 @@ asv_num_substrate_barplot <- ggpubr::ggbarplot(full_substrate_df, x = "stack", y
                  axis.line.y = element_blank(), 
                  axis.ticks.y = element_blank(), 
                  axis.text.y = element_blank(), 
-                 legend.position = "bottom") 
+                 legend.position = "bottom",
+                 legend.text = element_text(size = 8)) 
 asv_num_substrate_barplot
 
       ################Relative abundance#######################
@@ -1859,7 +1867,8 @@ asv_num_tree_barplot <- ggpubr::ggbarplot(full_tree_df, x = "stack", y = "value"
                  axis.line.y = element_blank(), 
                  axis.ticks.y = element_blank(), 
                  axis.text.y = element_blank(), 
-                 legend.position = "bottom") 
+                 legend.position = "bottom", 
+                 legend.text = element_text(size = 8)) 
 asv_num_tree_barplot
 
 ################Relative abundance#######################
@@ -2092,17 +2101,18 @@ substrate_differences <- ggpubr::ggarrange(asv_num_substrate_barplot, rel_abund_
                                       legend = "bottom", common.legend = T)
 substrate_differences
 
-# ggsave('substrate_differences.tiff', device = 'tiff',
-#         substrate_differences, width = 400, height = 240,
-#         units = 'mm', dpi = 300)
+ggsave('substrate_differences.jpeg', device = 'jpeg',
+        substrate_differences, width = 180, height = 140,
+        units = 'mm', dpi = 300)
+
 
 tree_differences <- ggpubr::ggarrange(asv_num_tree_barplot, rel_abund_tree_barplot,
                                            ncol = 2, nrow = 1,
                                            legend = "bottom", common.legend = T)
 tree_differences
 
-ggsave('tree_differences.tiff', device = 'tiff',
-       tree_differences, width = 400, height = 240,
+ggsave('tree_differences.jpeg', device = 'jpeg',
+       tree_differences, width = 180, height = 140,
        units = 'mm', dpi = 300)
 
 
