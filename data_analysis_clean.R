@@ -829,7 +829,8 @@ phyloseq::taxa_names(phy_alb_ord_top25_named_plot) <- phyloseq::tax_table(phy_al
 # Sort the taxa names alphabetically. 
 taxa_names_alb_ord <- base::sort(phyloseq::taxa_names(phy_alb_ord_top25_named_plot))
 
-# XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# To get our desired plotting order and group names we need to change 
+# the exploratory names and order them as factors.
 sampledata_alb <- base::data.frame(phyloseq::sample_data(phy_alb_ord_top25_named_plot))
 sampledata_alb <- sampledata_alb %>% 
   mutate(across("tree_substrate", stringr::str_replace, "Fagus_sylvatica-bark", "F. sylvatica bark")) %>% 
@@ -961,7 +962,6 @@ alb_ord_soil_plots <- phyloseq::subset_samples(phy_alb_ord_top25_named_plot, sub
         legend.key.size = unit(2.5, 'mm'),
         axis.ticks.length.x = unit(-0.2, "cm"), 
         legend.box.spacing = unit(-4, 'mm'),
-        legend.background = element_rect(fill = 'transparent'),
         text = element_text(colour = 'black', size = 20),
         strip.text = element_text(face = "italic")) + 
   xlab('Sample') +
@@ -992,7 +992,6 @@ alb_ord_bark_plots <- phyloseq::subset_samples(phy_alb_ord_top25_named_plot, sub
         legend.key.size = unit(1, 'mm'),
         axis.ticks.length.x = unit(-0.2, "cm"), 
         legend.box.spacing = unit(-4, 'mm'),
-        legend.background = element_rect(fill = 'transparent'),
         strip.text = element_text(face = "italic")) + 
   xlab('Sample') +
   ylab('Relative Abundance') + 
@@ -1052,7 +1051,6 @@ sch_ord_bark_plots <- phyloseq::subset_samples(phy_sch_ord_top25_named_plot, sub
         legend.key.size = unit(1, 'mm'),
         axis.ticks.length.x = unit(-0.2, "cm"), 
         legend.box.spacing = unit(-4, 'mm'),
-        legend.background = element_rect(fill = 'transparent'),
         strip.text = element_text(face = "italic")) + 
   xlab('Sample') +
   ylab('Relative Abundance') + 
