@@ -1,5 +1,7 @@
 # Habitat and tree species identity shape aboveground and belowground fungal communities in Central European forests 
- 
+
+![networks](https://github.com/LukDrey/fungal_habitat/blob/main/Fig1_substrate_differences.jpeg)
+
 This repository contains the data and pre-processing pipeline, as well as the R script for the analysis accompanying our paper: 
 
 > Hofmann B, Dreyling L, Dal Grande F, Otte J & Schmitt I 2023. Habitat and tree species identity shape aboveground and belowground fungal communities in Central European forests. Frontiers in Microbiology doi: [10.3389/fmicb.2023.1067906](https://www.frontiersin.org/articles/10.3389/fmicb.2023.1067906/abstract).
