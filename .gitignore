@@ -14,7 +14,7 @@
 *.gexf
 *.tiff
 *.svg
-*.txt
+.txt
 *.docx
 *.pdf
 *.odt
@@ -22,3 +22,6 @@
 *.jpeg
 *.jpg
 data_analysis.R
+new_numbers.txt
+!Fig1_substrate_differences.jpeg
+Figures_jpg/Fig1_substrate_differences.jpeg
