@@ -1,6 +1,6 @@
 # Habitat and tree species identity shape aboveground and belowground fungal communities in Central European forests 
 
-![networks](https://github.com/LukDrey/fungal_habitat/blob/main/Fig1_substrate_differences.jpeg)
+![Substrate Differences](https://github.com/LukDrey/fungal_habitat/blob/main/Fig1_substrate_differences.jpeg)
 
 This repository contains the data and pre-processing pipeline, as well as the R script for the analysis accompanying our paper: 
 
