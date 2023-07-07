@@ -2249,3 +2249,29 @@ total_reads_unknown_bark_sch
 
 total_reads_unknown_bark_sch/total_reads_bark_sch * 100
 
+### Export the taxonomy table.
+
+bark_samples_taxonomy <- metagMisc::phyloseq_to_df(physeq_bark, addtax = T, sorting = "taxonomy") %>% 
+  dplyr::select("OTU", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species") %>% 
+  dplyr::left_join(., dplyr::rename(fungi_rep_seqs, OTU = seq_name_fungi)) %>% 
+  dplyr::rename(Sequence = sequence_fungi, ASV_ID = OTU)
+
+soil_samples_taxonomy <- metagMisc::phyloseq_to_df(physeq_soil, addtax = T, sorting = "taxonomy") %>% 
+  dplyr::select("OTU", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species") %>% 
+  dplyr::left_join(., dplyr::rename(fungi_rep_seqs, OTU = seq_name_fungi)) %>% 
+  dplyr::rename(Sequence = sequence_fungi, ASV_ID = OTU)
+
+write.csv(soil_samples_taxonomy, "soil_samples_taxonomy.csv", row.names = F)
+write.csv(bark_samples_taxonomy, "bark_samples_taxonomy.csv", row.names = F)
+
+# Export the ASV table. 
+bark_samples_asv <- base::data.frame(phyloseq::otu_table(physeq_bark)) %>% 
+  tibble::rownames_to_column(var = "ASV_ID") %>% 
+  select(ASV_ID, sort(names(.)), -Sample_A51_B, -Sample_S51_B)
+
+soil_samples_asv <- base::data.frame(phyloseq::otu_table(physeq_soil)) %>% 
+  tibble::rownames_to_column(var = "ASV_ID") %>% 
+  select(ASV_ID, sort(names(.)))
+
+write.csv(bark_samples_asv, "bark_samples_asv.csv", row.names = F)
+write.csv(soil_samples_asv, "soil_samples_asv.csv", row.names = F)
