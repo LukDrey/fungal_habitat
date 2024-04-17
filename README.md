@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/566862412.svg)](https://zenodo.org/badge/latestdoi/566862412)
+
 # Habitat and tree species identity shape aboveground and belowground fungal communities in Central European forests 
 
 ![Substrate Differences](https://github.com/LukDrey/fungal_habitat/blob/main/Fig1_substrate_differences.jpeg)
@@ -29,7 +31,7 @@ Principal Investigator
 Additionally you need to download the raw reads [here](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA819266).  
 
 If you lack the computing power to process the raw reads, the resulting ASV tables, FASTA files, taxonomy table and metadata are located [here](02_Data.zip).  
-
+An archived version of this repository can be found at Zenodo. [![DOI](https://zenodo.org/badge/566862412.svg)](https://zenodo.org/badge/latestdoi/566862412)
 ## Before starting
 
 ### You will need to have the following software installed.
