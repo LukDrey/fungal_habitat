@@ -792,9 +792,9 @@ final_venn_diagrams <- ggpubr::ggarrange(venn_bark_alb, venn_soil_alb,
                                          labels = "AUTO")
 final_venn_diagrams
 
-ggsave('final_venn_diagrams.jpeg', device = 'jpeg',
+ggsave('final_venn_diagrams1.png', device = 'png',
        final_venn_diagrams, width = 180, height = 287,
-       units = 'mm', dpi = 300)
+       units = 'mm', dpi = 300, bg = "white")
 
 #################################################################
 ##                          Section 8                          ##
