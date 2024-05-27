@@ -12,7 +12,7 @@ This repository contains the data and pre-processing pipeline, as well as the R 
 
 **Lukas Dreyling**  
 Doctoral Candidate  
-[E-Mail](mailto:lukas.dreyling@senckenberg.de)  
+[E-Mail](mailto:uc2mvf9sm@mozmail.com)  
 
 **Imke Schmitt**  
 Principal Investigator  
